@@ -76,8 +76,8 @@ export const testimonials: readonly Testimonial[] = [
     author: { es: "Luis Carlos Revelo Tovar", en: "Luis Carlos Revelo Tovar" },
     role: { es: "Docente · Magíster en Software Libre", en: "Professor · Master in Free Software" },
     quote: {
-      es: "Juliana se distingue por su curiosidad y por la claridad con la que plantea sus dudas. Mantiene una comunicación constante y se nota su interés por aprender y mejorar cada proyecto.",
-      en: "Juliana stands out for her curiosity and for how clearly she raises her questions. She keeps in constant communication, and her drive to learn and improve every project shows.",
+      es: "Juliana se caracteriza por su creatividad, dedicación y capacidad para llevar los conocimientos adquiridos en clase a proyectos prácticos. Su interés por explorar nuevas tecnologías y mejorar continuamente sus desarrollos refleja una actitud proactiva frente a su formación profesional y los desafíos del desarrollo de software.",
+      en: "Juliana is characterized by her creativity, dedication and ability to bring the knowledge acquired in class into practical projects. Her interest in exploring new technologies and continuously improving her developments reflects a proactive attitude toward her professional training and the challenges of software development.",
     },
     pendingApproval: true,
   },
@@ -89,8 +89,8 @@ export const testimonials: readonly Testimonial[] = [
       en: "Professor and seedbed advisor · Systems Engineer, MSc in Computational Engineering, Specialist in Information Security",
     },
     quote: {
-      es: "He trabajado con Juliana en proyectos del semillero. Es responsable, aporta ideas y se nota su interés por la ciberseguridad y por construir soluciones bien pensadas.",
-      en: "I have worked with Juliana on seedbed projects. She is responsible, contributes ideas, and her interest in cybersecurity and in building well-thought-out solutions is clear.",
+      es: "Juliana demuestra compromiso, iniciativa y una actitud constante de aprendizaje. Durante su participación en actividades de investigación y desarrollo tecnológico, ha mostrado interés por proponer soluciones, asumir nuevos retos y fortalecer sus habilidades. Destaco especialmente su disposición para aplicar sus conocimientos en proyectos que integran tecnología e innovación.",
+      en: "Juliana shows commitment, initiative and a constant attitude of learning. During her participation in research and technological development activities, she has shown interest in proposing solutions, taking on new challenges and strengthening her skills. I especially highlight her willingness to apply her knowledge in projects that integrate technology and innovation.",
     },
     pendingApproval: true,
   },
