@@ -23,3 +23,16 @@ npm run lint
 - `src/hooks/` – pointer parallax (CSS variables only).
 
 All real content other than the name, role and tagline is a bracketed placeholder.
+
+## Phase 2: 3D keyboard
+
+- `src/components/keyboard/` – lazy WebGL scene (one InstancedMesh for caps, logo atlas), DOM key grid, panel, orb.
+- `src/data/technologies.ts` (keys + grid positions), `src/data/poses.ts` (pose per module).
+- `src/lib/keyboard-store.ts` – selection state and the `keyboardApi.raiseKeys / lowerAll` hook for phase 3.
+- Logos live in `public/logos/`, produced by `node scripts/sync-logos.mjs` (simple-icons, plus devicon for Java, C#, Azure and AWS).
+
+## Phase 3 / 3.5: introduction, projects, experience, contact (6 modules)
+
+- `src/data/projects.ts` – the six projects (localized fields, tech ids validated against the keyboard keys). Images live in `public/projects/`.
+- `src/components/projects/` – pinned 3D gallery (scroll sentinels + `keyboardApi.raiseKeys`) and stacked cards (mobile, no-JS, reduced motion).
+- `src/data/contact.ts` – `CONTACT_EMAIL` (empty until defined; the form's submit stays disabled).
