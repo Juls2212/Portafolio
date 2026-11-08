@@ -40,7 +40,7 @@ export interface Dictionary {
   about: {
     eyebrow: string;
     title: string;
-    text: string;
+    paragraphs: readonly [string, string];
     teaserTitle: string;
     teaserLine: string;
     photoAlt: string;
