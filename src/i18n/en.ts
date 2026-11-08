@@ -32,7 +32,10 @@ export const en: Dictionary = {
   about: {
     eyebrow: "P/02 · Profile",
     title: "About me",
-    text: "I like solving problems and thinking through the architecture before writing the first line. I work end to end, from frontend to backend, and cybersecurity is the lens I use to look at every system: I want what I build not just to work, but to hold up. That’s why I bring artificial intelligence and the cloud into each solution. And when a project allows it, I head toward virtual reality and AI-powered apps, where technology is something you experience rather than just use.",
+    paragraphs: [
+      "I'm a Full Stack developer and I enjoy facing new challenges, solving problems and finding different ways to turn an idea into something that works. I'm especially interested in software architecture design and in building solutions that are efficient, secure and well structured.",
+      "I like exploring technologies and learning while I build projects. I have a particular interest in cybersecurity, artificial intelligence and virtual reality, areas that let me experiment with new ways of creating applications and interactive experiences.",
+    ],
     teaserTitle: "My software side",
     teaserLine: "Architecture, cybersecurity, AI and cloud.",
     photoAlt: "Portrait of Juliana Peñafiel",
@@ -41,14 +44,14 @@ export const en: Dictionary = {
   interests: {
     eyebrow: "P/03 · Interests",
     name: "Interests",
-    title: "What do I love beyond software?",
+    title: "What I enjoy beyond code",
     items: [
-      { label: "Astronomy", detail: "My biggest obsession. For as long as I can remember, the sky has fascinated me most." },
-      { label: "Music", detail: "Music is always on in the background, and rock is home." },
-      { label: "Taekwondo and football", detail: "I train and compete in both, and they’ve brought me awards." },
-      { label: "Reading", detail: "The classics: Dostoevsky, Shakespeare." },
-      { label: "Theater", detail: "Acting has always called to me: I’ve been on stage in several plays." },
-      { label: "Rubik’s cubes", detail: "I solve them for fun and in local tournaments, where I won an award." },
+      { label: "Astronomy", detail: "I've been fascinated by the universe since I was little. It's, without a doubt, one of my biggest interests." },
+      { label: "Music", detail: "I listen to music practically all the time, especially rock." },
+      { label: "Taekwondo and football", detail: "Two sports I really enjoy. I've taken part in competitions and won a few awards." },
+      { label: "Reading", detail: "I really like classic literature, especially the works of Dostoevsky and Shakespeare." },
+      { label: "Theater", detail: "I've always liked acting and have had the chance to take part in several plays." },
+      { label: "Rubik’s cubes", detail: "I love solving them. I've even taken part in local tournaments and won an award." },
     ],
     teaserTitle: "Beyond the code",
     teaserLine: "Astronomy, rock, sports, theater and more.",
