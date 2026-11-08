@@ -67,6 +67,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = lang;
     document.title = t.meta.title;
+    const setMeta = (selector: string, content: string) =>
+      document.head.querySelector(selector)?.setAttribute("content", content);
+    setMeta('meta[name="description"]', t.meta.description);
+    setMeta('meta[property="og:title"]', t.meta.title);
+    setMeta('meta[property="og:description"]', t.meta.description);
+    setMeta('meta[property="og:locale"]', lang === "es" ? "es" : "en");
   }, [lang, t]);
 
   const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
