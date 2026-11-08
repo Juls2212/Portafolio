@@ -88,7 +88,11 @@ function AboutFull({ photoAvailable }: { photoAvailable: boolean }) {
       <div className="pfull__col">
         <p className="screen__eyebrow">{t.about.eyebrow}</p>
         <h2 className="screen__title">{t.about.title}</h2>
-        <p className="screen__text about-text">{t.about.text}</p>
+        {t.about.paragraphs.map((paragraph) => (
+          <p key={paragraph} className="screen__text about-text">
+            {paragraph}
+          </p>
+        ))}
       </div>
     </div>
   );
