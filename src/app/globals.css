@@ -2382,3 +2382,39 @@ html[data-phase="exit-in"] .floor__grid {
     align-items: stretch;
   }
 }
+
+.about-text + .about-text {
+  margin-top: 0.6rem;
+}
+
+/* Interests: slightly tighter spacing so the longer texts fit the panel without scroll. */
+@media all {
+  .cpanel__full:has(.interest-grid) {
+    padding-block: 1rem;
+  }
+  .cpanel__full .pfull--interests .screen__title {
+    margin-bottom: 0.6rem;
+  }
+  .cpanel__full .interest-grid {
+    gap: 0.35rem 1.1rem;
+  }
+  .cpanel__full .interest-grid li {
+    padding: 0.35rem 0.75rem;
+  }
+  .cpanel__full .interest-grid li[data-highlight="true"] {
+    padding: 0.5rem 0.85rem;
+  }
+  .cpanel__full .interest-grid h3 {
+    font-size: 0.95rem;
+  }
+  .cpanel__full .interest-grid li[data-highlight="true"] h3 {
+    font-size: 1.1rem;
+  }
+  .cpanel__full .interest-grid p {
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+  .cpanel__full .interest-grid li[data-highlight="true"] p {
+    font-size: 0.85rem;
+  }
+}
