@@ -137,24 +137,25 @@ export function ContactSection() {
         <ul className="social">
           {!emailPending && (
             <li className="social__item--mail">
-              <div className="social__btn social__btn--split">
-                <a
-                  href={`mailto:${CONTACT_EMAIL}`}
-                  className="social__main"
-                  aria-label={`${t.contact.emailAria} ${CONTACT_EMAIL}`}
-                >
-                  <SocialIcon id="mail" />
-                  <span className="social__name social__name--mail">{CONTACT_EMAIL}</span>
-                </a>
-                <button
-                  type="button"
-                  className="social__copy"
-                  aria-label={t.contact.copyAria}
-                  onClick={copyEmail}
-                >
-                  {t.contact.copy}
-                </button>
-              </div>
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="social__btn"
+                aria-label={t.contact.emailAria}
+              >
+                <SocialIcon id="mail" />
+                <span className="social__name">{t.contact.emailLabel}</span>
+                <span className="social__arrow" aria-hidden="true">
+                  ↗
+                </span>
+              </a>
+              <button type="button" className="social__copy" aria-label={t.contact.copyAria} onClick={copyEmail}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="11" height="11" rx="2" />
+                    <path d="M5 15V6a2 2 0 012-2h9" />
+                  </g>
+                </svg>
+              </button>
               <p className="social__status" role="status" aria-live="polite" data-state={copyState}>
                 {copyState === "copied" ? t.contact.copied : copyState === "failed" ? t.contact.copyFailed : ""}
               </p>

@@ -2317,50 +2317,6 @@ html[data-phase="exit-in"] .floor__grid {
 .social li {
   flex: 1 1 9.5rem;
 }
-.social li.social__item--mail {
-  flex: 1.8 1 17rem;
-}
-.social__btn--split {
-  padding: 0;
-  gap: 0;
-}
-.social__btn--split:focus-within {
-  border-color: var(--color-neon-hi);
-  background: color-mix(in oklab, var(--color-neon) 10%, transparent);
-  box-shadow: 0 0 26px color-mix(in oklab, var(--color-neon) 32%, transparent);
-}
-.social__main {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 0.8rem;
-  min-width: 0;
-  min-height: 3.5rem;
-  padding: 0.7rem 0.4rem 0.7rem 1.1rem;
-  color: inherit;
-  text-decoration: none;
-}
-.social__name--mail {
-  font-size: 0.95rem;
-  overflow-wrap: anywhere;
-}
-.social__copy {
-  align-self: stretch;
-  min-width: 4.5rem;
-  margin: 0.45rem 0.55rem 0.45rem 0.3rem;
-  padding: 0 0.8rem;
-  border: 1px solid color-mix(in oklab, var(--color-neon) 45%, transparent);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--color-neon-hi);
-  font: 600 0.72rem/1 var(--font-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.social__copy:hover {
-  background: color-mix(in oklab, var(--color-neon) 16%, transparent);
-}
 .social__status {
   min-height: 1.2em;
   margin: 0.35rem 0 0;
@@ -2371,12 +2327,6 @@ html[data-phase="exit-in"] .floor__grid {
   color: var(--color-mute);
 }
 
-.social__btn--split {
-  min-height: 3.5rem;
-}
-.social__main {
-  min-height: calc(3.5rem - 2px);
-}
 @media (max-width: 767px) {
   .social {
     align-items: stretch;
@@ -2417,4 +2367,39 @@ html[data-phase="exit-in"] .floor__grid {
   .cpanel__full .interest-grid li[data-highlight="true"] p {
     font-size: 0.85rem;
   }
+}
+
+/* Email item: same card as LinkedIn / GitHub, plus a small icon-only copy control beside the arrow. */
+.social li {
+  position: relative;
+}
+.social__copy {
+  position: absolute;
+  top: 50%;
+  right: 3rem;
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  translate: 0 -50%;
+  border: 1px solid color-mix(in oklab, var(--color-neon) 40%, transparent);
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--color-abyss) 60%, transparent);
+  color: var(--color-neon-hi);
+  cursor: pointer;
+}
+.social__copy svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.social__copy:hover,
+.social__copy:focus-visible {
+  background: color-mix(in oklab, var(--color-neon) 18%, transparent);
+}
+.social__status {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin: 0.35rem 0 0;
 }

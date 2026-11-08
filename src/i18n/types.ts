@@ -95,8 +95,8 @@ export interface Dictionary {
     mailSubject: string;
     socialTitle: string;
     socialAria: { linkedin: string; github: string };
+    emailLabel: string;
     emailAria: string;
-    copy: string;
     copyAria: string;
     copied: string;
     copyFailed: string;
