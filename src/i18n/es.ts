@@ -33,7 +33,10 @@ export const es: Dictionary = {
   about: {
     eyebrow: "P/02 · Perfil",
     title: "Sobre mí",
-    text: "Me gusta resolver problemas y pensar la arquitectura antes de escribir la primera línea. Trabajo de punta a punta, del frontend al backend, y la ciberseguridad es la lente con la que miro cada sistema: quiero que lo que construyo no solo funcione, sino que aguante. Por eso me interesa sumarle inteligencia artificial y la nube a cada solución. Y cuando el proyecto lo permite, me voy hacia la realidad virtual y las aplicaciones con IA, donde la tecnología se vive en lugar de solo usarse.",
+    paragraphs: [
+      "Soy desarrolladora Full Stack y disfruto enfrentar nuevos retos, resolver problemas y encontrar distintas formas de convertir una idea en algo funcional. Me interesa especialmente el diseño de arquitecturas de software y la creación de soluciones que sean eficientes, seguras y bien estructuradas.",
+      "Me gusta explorar tecnologías y aprender mientras desarrollo proyectos. Tengo un interés particular por la ciberseguridad, la inteligencia artificial y la realidad virtual, áreas que me permiten experimentar con nuevas formas de crear aplicaciones y experiencias interactivas.",
+    ],
     teaserTitle: "Mi lado de software",
     teaserLine: "Arquitectura, ciberseguridad, IA y nube.",
     photoAlt: "Retrato de Juliana Peñafiel",
@@ -42,14 +45,14 @@ export const es: Dictionary = {
   interests: {
     eyebrow: "P/03 · Intereses",
     name: "Intereses",
-    title: "¿Qué me gusta fuera del software?",
+    title: "Lo que disfruto fuera del código",
     items: [
-      { label: "Astronomía", detail: "Mi mayor obsesión. Desde que tengo memoria, el cielo es lo que más me intriga." },
-      { label: "Música", detail: "Vivo con música de fondo, y el rock es mi casa." },
-      { label: "Taekwondo y fútbol", detail: "Entreno y compito en ambos, y me han dejado premios." },
-      { label: "Lectura", detail: "Los clásicos: Dostoyevski, Shakespeare." },
-      { label: "Teatro", detail: "La actuación siempre me llamó: he subido a escena en varias obras." },
-      { label: "Cubos Rubik", detail: "Los armo por gusto y también en torneos locales, donde conseguí un premio." },
+      { label: "Astronomía", detail: "Desde pequeña me ha fascinado el universo. Es, sin duda, uno de mis mayores intereses." },
+      { label: "Música", detail: "Escucho música prácticamente todo el tiempo, especialmente rock." },
+      { label: "Taekwondo y fútbol", detail: "Son dos deportes que disfruto mucho. He participado en competencias y ganado algunos premios." },
+      { label: "Lectura", detail: "Me gusta mucho la literatura clásica, especialmente las obras de Dostoyevski y Shakespeare." },
+      { label: "Teatro", detail: "Siempre me ha gustado actuar y he tenido la oportunidad de participar en varias obras." },
+      { label: "Cubos Rubik", detail: "Me encanta resolverlos. Incluso he participado en torneos locales y gané un premio." },
     ],
     teaserTitle: "Fuera del código",
     teaserLine: "Astronomía, rock, deporte, teatro y más.",
