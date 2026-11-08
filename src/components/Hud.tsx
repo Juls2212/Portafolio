@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { modules } from "@/data/modules";
-import type { ModuleId } from "@/data/modules";
 import { profile } from "@/data/profile";
 import { useLang, useT } from "@/i18n/language-context";
+import { useActiveModule } from "@/lib/active-module";
 import { useIntroDone } from "@/lib/intro-store";
+import { backToHome, useSiteMode } from "@/lib/site-mode";
 
 const TYPE_INTERVAL_MS = 26;
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -26,27 +27,6 @@ function useTypedChars(active: boolean): number {
   return chars;
 }
 
-/** Keeps the counter in sync with whichever module section is crossing the viewport middle. */
-function useActiveModule(): ModuleId {
-  const [active, setActive] = useState<ModuleId>("room");
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) setActive(entry.target.id as ModuleId);
-        }
-      },
-      { rootMargin: "-50% 0px -50% 0px" },
-    );
-    modules.forEach((m) => {
-      const el = document.getElementById(m.id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, []);
-  return active;
-}
-
 /** Bottom HUD label; lives at the foot of the room so it never overlaps stacked screens. */
 export function LevelLabel() {
   const t = useT();
@@ -59,6 +39,7 @@ export function Hud() {
   const introDone = useIntroDone();
   const chars = useTypedChars(introDone);
   const activeId = useActiveModule();
+  const siteMode = useSiteMode();
 
   const active = modules.find((m) => m.id === activeId) ?? modules[0];
   const lines = [`${t.hud.lineProfile} ${profile.name}`, t.hud.lineEnv, t.hud.lineLevel];
@@ -87,6 +68,14 @@ export function Hud() {
           </div>
         </div>
         <div className="hud__right">
+          {siteMode === "explore" && (
+            <button type="button" className="hud__back" onClick={backToHome}>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 5l-7 7 7 7" />
+              </svg>
+              {t.hud.back}
+            </button>
+          )}
           <p className="hud__counter">
             {pad(active.number)} / {pad(modules.length)} · {active.label[lang]}
           </p>
