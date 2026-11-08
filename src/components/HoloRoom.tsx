@@ -2,17 +2,18 @@
 
 import { useRef } from "react";
 import { LevelLabel } from "@/components/Hud";
-import { AboutScreen } from "@/components/AboutScreen";
-import { InterestsScreen } from "@/components/InterestsScreen";
-import { PresentationScreen } from "@/components/PresentationScreen";
+import { HomeStage } from "@/components/home/HomeStage";
+import type { AssetAvailability } from "@/data/assets";
 import { useParallax } from "@/hooks/useParallax";
 import { useT } from "@/i18n/language-context";
+import { useResetCount } from "@/lib/site-mode";
 
 /** Level 01: holographic room with three floating glass screens. */
-export function HoloRoom() {
+export function HoloRoom({ assets }: { assets: AssetAvailability }) {
   const t = useT();
   const roomRef = useRef<HTMLElement>(null);
   useParallax(roomRef);
+  const resetCount = useResetCount();
 
   return (
     <section id="room" ref={roomRef} className="room" aria-label={t.a11y.roomRegion}>
@@ -30,14 +31,7 @@ export function HoloRoom() {
         <div className="scan-sweep" />
       </div>
 
-      <div className="stage-wrap">
-        <div className="stage">
-          {/* DOM order = reading order; desktop placement is set in CSS via data-pos. */}
-          <PresentationScreen />
-          <AboutScreen />
-          <InterestsScreen />
-        </div>
-      </div>
+      <HomeStage key={resetCount} assets={assets} />
       <LevelLabel />
     </section>
   );
