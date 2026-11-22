@@ -16,6 +16,28 @@
   --font-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Mono", monospace;
 }
 
+/* Motion system (mirrors src/lib/motion.ts). */
+:root {
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.3, 1.5, 0.6, 1);
+  --ease-settle: cubic-bezier(0.25, 1.15, 0.5, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.9, 0.5);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 180ms;
+  --dur-base: 500ms;
+  --dur-slow: 650ms;
+  --dur-decode: 600ms;
+  --dur-wipe: 400ms;
+  /* Written by src/lib/ambient.ts (one shared pointer/scroll listener). */
+  --px: 0;
+  --py: 0;
+  --nx: 0;
+  --ny: 0;
+  --mx: 50vw;
+  --my: 50vh;
+  --scroll: 0;
+}
+
 @layer base {
   html {
     background: var(--color-abyss);
@@ -216,8 +238,6 @@ html[data-intro="playing"] .matrix-canvas {
 /* Room background                                                     */
 /* ------------------------------------------------------------------ */
 .room {
-  --px: 0;
-  --py: 0;
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -299,7 +319,7 @@ html[data-intro="playing"] .matrix-canvas {
   inset: 0 0 auto 0;
   height: 22%;
   background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--color-neon) 6%, transparent), transparent);
-  animation: sweep 9s linear infinite;
+  animation: sweep 8s linear infinite;
 }
 
 /* ------------------------------------------------------------------ */
@@ -330,7 +350,7 @@ html[data-intro="playing"] .matrix-canvas {
 }
 html[data-ready] .screen {
   animation:
-    power-on 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i) * 380ms + 150ms) both,
+    power-on 0.9s var(--ease-out) calc(var(--i) * 380ms + 150ms) both,
     float 7s ease-in-out calc(var(--i) * 380ms + 1.2s) infinite alternate;
 }
 @media (min-width: 1024px) {
@@ -424,7 +444,7 @@ html[data-ready] .screen {
   font: 600 0.9rem/1.2 var(--font-sans);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, translate var(--dur-fast) var(--ease-out);
 }
 .btn--primary {
   background: var(--color-neon);
@@ -633,7 +653,7 @@ main {
     0 5px 0 color-mix(in oklab, var(--key) 45%, var(--color-abyss)),
     0 8px 14px color-mix(in oklab, black 45%, transparent);
   cursor: pointer;
-  transition: translate 0.18s cubic-bezier(0.3, 1.5, 0.6, 1), box-shadow 0.18s ease;
+  transition: translate 0.18s var(--ease-spring), box-shadow 0.18s ease;
 }
 .keycap:hover {
   translate: 0 3px;
@@ -959,7 +979,7 @@ html[data-orb] body * {
   transform: translateY(18px);
   transition:
     opacity 0.5s ease,
-    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform 0.5s var(--ease-out);
   pointer-events: none;
 }
 .exhibit[data-active="true"] {
@@ -1070,7 +1090,7 @@ html[data-orb] body * {
   background: color-mix(in oklab, var(--color-abyss) 70%, transparent);
   color: var(--color-neon-hi);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, translate var(--dur-fast) var(--ease-out);
 }
 .arrow-btn svg {
   width: 1.1rem;
@@ -1230,7 +1250,7 @@ html[data-orb] body * {
   transition: opacity 0.18s ease;
 }
 .keyboard-layer[data-visible="true"] {
-  opacity: 1;
+  opacity: var(--kb-fade, 1);
 }
 
 .project__index {
@@ -1557,11 +1577,14 @@ html[data-orb] body * {
   height: var(--ph);
   transform: translate(-50%, -50%) translateX(var(--x)) translateY(var(--y)) rotateY(var(--ry)) scale(var(--sc));
   transition:
-    transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.65s var(--ease-out),
     opacity 0.5s ease;
 }
 .cpanel[data-slot="center"] {
   z-index: 3;
+  transition:
+    transform var(--dur-slow) var(--ease-settle),
+    opacity 0.5s ease;
 }
 .cpanel[data-slot="left"],
 .cpanel[data-slot="right"] {
@@ -1589,14 +1612,16 @@ html[data-orb] body * {
   padding: 0;
   overflow: hidden;
 }
-.cpanel[data-slot="center"] .cpanel__glass.screen {
+/* Gated on data-ready like every other entrance: before the intro ends the panel stays hidden, so
+   nothing starts under the rain and nothing restarts when the rain is over. */
+html[data-ready] .cpanel[data-slot="center"] .cpanel__glass.screen {
   animation:
-    power-on 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i) * 380ms + 150ms) both,
+    power-on 0.9s var(--ease-out) calc(var(--i) * 380ms + 150ms) both,
     float 7s ease-in-out calc(var(--i) * 380ms + 1.2s) infinite alternate;
 }
 html[data-ready] .cpanel[data-slot="left"] .cpanel__glass.screen,
 html[data-ready] .cpanel[data-slot="right"] .cpanel__glass.screen {
-  animation: power-on 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i) * 380ms + 150ms) both;
+  animation: power-on 0.9s var(--ease-out) calc(var(--i) * 380ms + 150ms) both;
 }
 .cpanel__full {
   position: absolute;
@@ -1875,6 +1900,12 @@ html[data-ready] .cpanel[data-slot="right"] .cpanel__glass.screen {
 .acc[data-open="true"] .acc__inner {
   padding-bottom: 1.3rem;
 }
+/* Phone accordion: a dark glass behind each row keeps text contrast AA over the globe. */
+.accordion .acc {
+  background: color-mix(in oklab, var(--color-abyss) 66%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
 .accordion .pfull--about {
   grid-template-columns: minmax(0, 1fr);
   justify-items: start;
@@ -1917,11 +1948,7 @@ html[data-ready] .cpanel[data-slot="right"] .cpanel__glass.screen {
     color-mix(in oklab, var(--color-panel) 94%, transparent),
     color-mix(in oklab, var(--color-abyss) 80%, transparent)
   );
-  opacity: 0;
-  transform: translateY(22px);
   transition:
-    opacity 0.6s ease calc(var(--i) * 130ms),
-    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i) * 130ms),
     translate 0.3s ease,
     box-shadow 0.3s ease,
     border-color 0.3s ease;
@@ -1931,10 +1958,6 @@ html[data-ready] .cpanel[data-slot="right"] .cpanel__glass.screen {
 }
 .t-card[data-accent="lime"] {
   --accent: var(--color-lime);
-}
-.t-grid[data-revealed="true"] .t-card {
-  opacity: 1;
-  transform: none;
 }
 @media (hover: hover) and (pointer: fine) {
   .t-card:hover,
@@ -2092,7 +2115,7 @@ html[data-flash] .site-flash {
 }
 /* Enter: panels recede into depth, the floor streaks forward, flash, Stack fades in. */
 html[data-phase="enter-out"] .home {
-  animation: recede 0.65s cubic-bezier(0.5, 0, 0.9, 0.5) forwards;
+  animation: recede 0.65s var(--ease-in) forwards;
 }
 html[data-phase="enter-out"] .hud-level {
   animation: fade-out 0.4s ease forwards;
@@ -2133,7 +2156,8 @@ html[data-phase="exit-in"] .floor__grid {
   cursor: pointer;
   transition:
     background-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    translate var(--dur-fast) var(--ease-out);
 }
 .hud__back svg {
   width: 0.9rem;
@@ -2193,7 +2217,8 @@ html[data-phase="exit-in"] .floor__grid {
   transition:
     border-color 0.25s ease,
     box-shadow 0.25s ease,
-    background-color 0.25s ease;
+    background-color 0.25s ease,
+    translate var(--dur-fast) var(--ease-out);
 }
 .social__btn:hover,
 .social__btn:focus-visible {
@@ -2402,4 +2427,1955 @@ html[data-phase="exit-in"] .floor__grid {
   top: 100%;
   left: 0;
   margin: 0.35rem 0 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Phase 5: atmosphere, HUD frame, globe, depth, animation polish      */
+/* ------------------------------------------------------------------ */
+
+/* HOME: the sky moves from .room to the page background so the WebGL globe (fixed, under <main>)
+   shows between the sky and the glass panels. */
+html[data-mode="home"] {
+  background:
+    radial-gradient(60% 50% at 50% 36%, color-mix(in oklab, var(--color-neon) 15%, transparent), transparent 70%),
+    radial-gradient(38% 42% at 10% 18%, color-mix(in oklab, var(--color-teal) 16%, transparent), transparent 70%),
+    radial-gradient(34% 40% at 92% 28%, color-mix(in oklab, var(--color-lime) 9%, transparent), transparent 70%),
+    linear-gradient(to bottom, var(--color-deep), var(--color-abyss) 78%) fixed;
+  background-color: var(--color-abyss);
+}
+html[data-mode="home"] .room {
+  background: none;
+  touch-action: pan-y;
+}
+.room[data-dragging] {
+  cursor: grabbing;
+  user-select: none;
+}
+html[data-hidden] *,
+html[data-hidden] *::before,
+html[data-hidden] *::after {
+  animation-play-state: paused !important;
+}
+
+/* --- Atmosphere (fixed, non-interactive, transform/opacity only) --- */
+.atmo {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* Per-module tint: three static gradients crossfaded by opacity (compositor only, no repaint). A single
+   layer driven by registered properties was tried and repainted the whole viewport during the fade. */
+.atmo__tint {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.4s var(--ease-in-out);
+}
+.atmo__tint--neon {
+  background: radial-gradient(60% 50% at 50% 28%, color-mix(in oklab, var(--color-neon) 10%, transparent), transparent 72%);
+}
+.atmo__tint--teal {
+  background: radial-gradient(60% 55% at 22% 68%, color-mix(in oklab, var(--color-teal) 12%, transparent), transparent 72%);
+}
+.atmo__tint--lime {
+  background: radial-gradient(55% 50% at 80% 58%, color-mix(in oklab, var(--color-lime) 8%, transparent), transparent 72%);
+}
+html:not([data-tint]) .atmo__tint--neon,
+html[data-tint="neon"] .atmo__tint--neon,
+html[data-tint="teal"] .atmo__tint--teal,
+html[data-tint="lime"] .atmo__tint--lime {
+  opacity: 1;
+}
+
+/* Parallax dots: layer 1 carries two dot sizes on a common 192px period, layer 2 is a faint grid. */
+.atmo__dots {
+  --t: 192px;
+  --rate: -0.05;
+  --shift: 8px;
+  position: absolute;
+  inset: -300px;
+  translate: 0 0;
+  translate: 0 mod(calc(var(--scroll-px, 0px) * var(--rate)), var(--t));
+  transform: translate3d(calc(var(--nx, 0) * var(--shift) * -1), calc(var(--ny, 0) * var(--shift) * -1), 0);
+  transition: transform 0.6s var(--ease-out);
+  will-change: transform;
+}
+.atmo__dots--1 {
+  background-image:
+    radial-gradient(circle, color-mix(in oklab, var(--color-neon) 70%, transparent) 1px, transparent 1.7px),
+    radial-gradient(circle, color-mix(in oklab, var(--color-neon-hi) 80%, transparent) 1.4px, transparent 2.2px);
+  background-size: 96px 96px, 192px 192px;
+  background-position: 0 0, 48px 48px;
+  opacity: 0.15;
+}
+.atmo__dots--2 {
+  --t: 260px;
+  --rate: -0.12;
+  --shift: 22px;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-teal) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-teal) 70%, transparent) 1px, transparent 1px);
+  background-size: 260px 260px;
+  opacity: 0.07;
+}
+
+/* Light shafts: one layer, three soft diagonal bands, drifting as a group (no blur, no blend mode). */
+.atmo__shafts {
+  position: absolute;
+  inset: -5% -12%;
+  background:
+    linear-gradient(104deg, transparent 8%, color-mix(in oklab, var(--color-neon) 7%, transparent) 13%, transparent 21%),
+    linear-gradient(110deg, transparent 38%, color-mix(in oklab, var(--color-teal) 6%, transparent) 44%, transparent 52%),
+    linear-gradient(116deg, transparent 66%, color-mix(in oklab, var(--color-lime) 4.5%, transparent) 72%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, transparent 85%);
+  mask-image: linear-gradient(to bottom, #000 0, transparent 85%);
+  animation: shaft-drift 36s var(--ease-in-out) infinite alternate;
+  will-change: transform;
+}
+@keyframes shaft-drift {
+  from {
+    transform: translate3d(-3vw, 0, 0);
+  }
+  to {
+    transform: translate3d(3vw, 0, 0);
+  }
+}
+
+.atmo__spot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 620px;
+  height: 620px;
+  margin: -310px 0 0 -310px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-neon) 15%, transparent),
+    color-mix(in oklab, var(--color-neon) 5%, transparent) 42%,
+    transparent 70%
+  );
+  translate: var(--mx, 50vw) var(--my, 50vh);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  will-change: translate;
+}
+html[data-pointer="on"] .atmo__spot {
+  opacity: 1;
+}
+
+/* Film grain (alpha baked into the tile) and vignette share one static layer. */
+.atmo__veil {
+  position: absolute;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .063 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(ellipse at 50% 46%, transparent 52%, color-mix(in oklab, var(--color-abyss) 78%, transparent) 100%);
+  background-size: 180px 180px, 100% 100%;
+}
+
+/* Depth fog near the floor horizon (room only). */
+.fog {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: -34%;
+  height: 78%;
+  background:
+    radial-gradient(52% 50% at 28% 55%, color-mix(in oklab, var(--color-neon) 13%, transparent), transparent 70%),
+    radial-gradient(48% 46% at 74% 52%, color-mix(in oklab, var(--color-teal) 13%, transparent), transparent 70%),
+    linear-gradient(to bottom, transparent, color-mix(in oklab, var(--color-neon) 7%, transparent) 55%, transparent);
+  animation: fog-drift 26s var(--ease-in-out) infinite alternate;
+  will-change: transform;
+}
+@keyframes fog-drift {
+  from {
+    transform: translate3d(-4%, 0, 0);
+  }
+  to {
+    transform: translate3d(4%, 0, 0);
+  }
+}
+
+/* Faint scan line riding on the existing room sweep (every 8 s). */
+.scan-sweep::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, color-mix(in oklab, var(--color-neon-hi) 38%, transparent), transparent);
+}
+
+/* Thin green line that wipes down the screen when the active module changes (JS: WAAPI). */
+.scan-wipe {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 90;
+  height: 2px;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--color-neon-hi) 18%, var(--color-neon-hi) 82%, transparent);
+  box-shadow: 0 0 18px 2px color-mix(in oklab, var(--color-neon) 70%, transparent);
+  will-change: transform;
+}
+
+/* --- HUD frame: readouts, ticks --- */
+.hud-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 49;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  color: var(--color-mute);
+}
+.hud-frame::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2rem;
+  background: linear-gradient(to top, color-mix(in oklab, var(--color-abyss) 88%, transparent), transparent);
+}
+.hud-frame__sys,
+.hud-frame__readout {
+  position: absolute;
+  bottom: 1rem;
+  z-index: 1;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-size: 0.62rem;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.hud-frame__sys {
+  left: 1rem;
+  gap: 0.5rem;
+}
+.hud-frame__readout {
+  right: 1rem;
+}
+.hud-frame__module {
+  color: var(--color-neon-hi);
+}
+.hud-frame__led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-neon);
+  box-shadow: 0 0 8px var(--color-neon);
+  animation: blink 2.4s steps(2, end) infinite;
+}
+.hud-frame__pct {
+  counter-reset: pct var(--pct, 0);
+}
+.hud-frame__pct::after {
+  content: counter(pct) "%";
+}
+.hud-frame__time:empty {
+  display: none;
+}
+.hud-ticks {
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hud-ticks li {
+  position: relative;
+  width: 5px;
+  height: 2px;
+  background: color-mix(in oklab, var(--color-neon) 35%, transparent);
+  transition:
+    width var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) ease,
+    box-shadow var(--dur-base) ease;
+}
+.hud-ticks li[data-on="true"] {
+  width: 10px;
+  background: var(--color-neon-hi);
+  box-shadow: 0 0 8px var(--color-neon);
+}
+@media (min-width: 768px) {
+  .hud-frame__sys {
+    left: 1.25rem;
+  }
+  .hud-frame__readout {
+    right: 2rem;
+  }
+  .hud-ticks li {
+    width: 6px;
+  }
+  .hud-ticks li[data-on="true"] {
+    width: 11px;
+  }
+}
+/* The room already prints its own level label at the foot; on phones the frame readouts take that row. */
+@media (max-width: 767px) {
+  .hud-level {
+    display: none;
+  }
+  .hud-frame__readout {
+    gap: 0.6rem;
+  }
+  /* Scrolling content would pass under the bottom readouts on a phone: EXPLORE keeps only the ticks
+     (the top HUD already names the module). */
+  html[data-mode="explore"] .hud-frame__sys,
+  html[data-mode="explore"] .hud-frame__readout,
+  html[data-mode="explore"] .hud-frame::after {
+    display: none;
+  }
+}
+@media (min-width: 768px) {
+  html[data-mode="explore"] #explore-root {
+    padding-bottom: 2.6rem;
+  }
+}
+
+/* HUD boot: elements appear with a short stagger once the intro is over. */
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-ready]) .hud-boot {
+    opacity: 0;
+  }
+  html[data-ready] .hud-boot {
+    animation: hud-in var(--dur-base) var(--ease-out) calc(var(--b, 0) * 90ms + 150ms) both;
+  }
+  @keyframes hud-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, -8px, 0);
+    }
+  }
+}
+
+/* --- Globe: labels, no-WebGL fallback --- */
+.glabels {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.glabel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  font: 500 0.62rem/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  color: var(--color-neon-hi);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+.glabel__dot {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-neon-hi);
+  box-shadow: 0 0 10px var(--color-neon);
+  transition: scale var(--dur-base) var(--ease-out);
+}
+.glabel__line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 54px;
+  height: 1px;
+  transform-origin: 0 50%;
+  transform: rotate(-32deg);
+  background: linear-gradient(to right, var(--color-neon-hi), color-mix(in oklab, var(--color-neon) 20%, transparent));
+}
+.glabel__text {
+  position: absolute;
+  left: 50px;
+  top: -38px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid color-mix(in oklab, var(--color-neon) 40%, transparent);
+  background: color-mix(in oklab, var(--color-abyss) 78%, transparent);
+  transition: border-color var(--dur-base) ease, color var(--dur-base) ease;
+}
+.glabel[data-side="l"] .glabel__line {
+  transform: rotate(-148deg);
+}
+.glabel[data-side="l"] .glabel__text {
+  left: auto;
+  right: 50px;
+}
+.glabel[data-hot="true"] .glabel__dot {
+  scale: 1.9;
+}
+.glabel[data-hot="true"] .glabel__text {
+  border-color: var(--color-neon-hi);
+  color: var(--color-ink);
+}
+@media (max-width: 767px) {
+  .glabels {
+    display: none;
+  }
+}
+.globe-fallback {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(86vh, 92vw);
+  translate: -50% -50%;
+  color: var(--color-neon);
+  opacity: 0.5;
+}
+html[data-webgl="1"] .globe-fallback {
+  display: none;
+}
+
+/* --- Depth: reveal, tilt, light sweep (fine pointers, motion allowed) --- */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition:
+      opacity var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms),
+      scale var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms),
+      filter var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms);
+  }
+  html[data-motion="on"] [data-reveal]:not([data-in]) {
+    opacity: 0;
+    scale: 0.94;
+    filter: blur(6px);
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .academic,
+  .t-card,
+  .project__image {
+    position: relative;
+    transform: perspective(900px) rotateX(calc(var(--ty, 0) * -5deg)) rotateY(calc(var(--tx, 0) * 5deg));
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      box-shadow 0.3s ease,
+      border-color 0.3s ease,
+      translate 0.3s ease,
+      opacity var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms),
+      scale var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms),
+      filter var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms);
+  }
+  .academic[data-live],
+  .t-card[data-live],
+  .project__image[data-live] {
+    box-shadow:
+      0 2px 4px rgb(0 0 0 / 0.35),
+      0 14px 28px -10px rgb(0 0 0 / 0.5),
+      0 34px 64px -24px color-mix(in oklab, var(--accent, var(--color-neon)) 32%, transparent);
+  }
+  .academic::after,
+  .t-card::after,
+  .project__image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.08) 50%, transparent 62%) no-repeat -160% 0 / 160% 100%;
+    transition: opacity var(--dur-base) ease, background-position 0.9s var(--ease-out);
+  }
+  .academic:hover::after,
+  .t-card:hover::after,
+  .project__image:hover::after {
+    opacity: 1;
+    background-position: 260% 0;
+  }
+
+  /* Magnetic buttons: the shared pointer listener writes --mgx / --mgy (px) while hovering. */
+  .btn,
+  .social__btn,
+  .arrow-btn,
+  .hud__back {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    translate: calc(var(--mgx, 0) * 1px) calc(var(--mgy, 0) * 1px);
+  }
+  .btn::after,
+  .social__btn::after,
+  .arrow-btn::after,
+  .hud__back::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.16) 50%, transparent 65%);
+    transform: translate3d(-120%, 0, 0);
+  }
+  .btn:hover::after,
+  .social__btn:hover::after,
+  .arrow-btn:hover:not(:disabled)::after,
+  .hud__back:hover::after {
+    transform: translate3d(120%, 0, 0);
+    transition: transform 0.7s var(--ease-out);
+  }
+  .btn:active,
+  .social__btn:active,
+  .arrow-btn:active,
+  .hud__back:active {
+    opacity: 0.62;
+  }
+}
+
+/* Carousel: a light sweep crosses the panel that becomes active. */
+@media (prefers-reduced-motion: no-preference) {
+  .cpanel[data-slot="center"] .cpanel__glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 36%, color-mix(in oklab, var(--accent) 20%, transparent) 50%, transparent 64%);
+    transform: translate3d(-110%, 0, 0);
+    animation: panel-sweep 0.9s var(--ease-out) 0.1s both;
+  }
+  @keyframes panel-sweep {
+    from {
+      transform: translate3d(-110%, 0, 0);
+      opacity: 1;
+    }
+    to {
+      transform: translate3d(110%, 0, 0);
+      opacity: 0;
+    }
+  }
+}
+
+/* --- Heading decode: the real characters stay in flow; a scrambled glyph is drawn over each one --- */
+.dc {
+  position: relative;
+}
+.decode__word {
+  display: inline-block;
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-motion="on"] .decode .dc:not([data-r]) {
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  html[data-motion="on"] .decode .dc[data-g]::before {
+    content: attr(data-g);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    font-weight: 500;
+    color: var(--color-neon-hi);
+    -webkit-text-fill-color: var(--color-neon-hi);
+    opacity: 0.9;
+    pointer-events: none;
+  }
+}
+
+/* --- Mobile: fewer effects --- */
+@media (max-width: 767px), (pointer: coarse) {
+  .atmo__dots--2,
+  .atmo__spot {
+    display: none;
+  }
+}
+
+/* --- Reduced motion: static atmosphere, no moving layers --- */
+@media (prefers-reduced-motion: reduce) {
+  .atmo__shafts,
+  .fog,
+  .scan-sweep,
+  .hud-frame__led {
+    animation: none;
+  }
+  .atmo__dots {
+    translate: none;
+    transform: none;
+  }
+  .atmo__spot {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Phase 5.1: living home panels, EXPLORE space background             */
+/* ------------------------------------------------------------------ */
+
+@property --project-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #1fe08f;
+}
+html {
+  transition: --project-accent 0.9s ease;
+}
+
+/* --- EXPLORE background: starfield canvas, floor, circuit traces, project glow --- */
+.space-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+html[data-mode="home"] .space-bg {
+  display: none;
+}
+.space-bg__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.space-bg__floor {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 42%;
+  overflow: hidden;
+  perspective: 380px;
+  perspective-origin: 50% 0;
+  opacity: 0.2;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 70%);
+  mask-image: linear-gradient(to bottom, transparent 0, black 70%);
+}
+.space-bg__plane {
+  position: absolute;
+  top: 0;
+  left: -60%;
+  right: -60%;
+  height: 320%;
+  transform-origin: 50% 0;
+  transform: rotateX(72deg);
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-neon) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-neon) 55%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+/* Slow CSS-only twinkle: one layer of sparse dots fading in and out. */
+.space-bg__twinkle {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  animation: twinkle 6s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at 12% 18%, var(--color-neon-hi) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 34% 72%, var(--color-neon-hi) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 58% 28%, var(--color-neon-hi) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 81% 64%, var(--color-neon-hi) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 93% 12%, var(--color-neon-hi) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 22% 44%, var(--color-lime) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 47% 9%, var(--color-neon-hi) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 69% 86%, var(--color-teal) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 88% 38%, var(--color-neon-hi) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 6% 83%, var(--color-neon-hi) 0 1.3px, transparent 2px);
+}
+@keyframes twinkle {
+  to {
+    opacity: 0.5;
+  }
+}
+.space-bg__circuit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 1.2s var(--ease-in-out),
+    visibility 0s linear 1.2s;
+}
+html[data-module="stack"] .space-bg__circuit {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 1.2s var(--ease-in-out);
+}
+.circuit__traces path {
+  fill: none;
+  stroke: color-mix(in oklab, var(--color-teal) 60%, transparent);
+  stroke-width: 1.2;
+  opacity: 0.32;
+}
+.circuit__traces circle {
+  fill: color-mix(in oklab, var(--color-teal) 70%, transparent);
+  opacity: 0.35;
+}
+.circuit__pulses path {
+  fill: none;
+  stroke: var(--color-neon-hi);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 4 96;
+  opacity: 0.6;
+  animation: pulse-run 8s linear infinite;
+  animation-delay: calc(var(--k) * -1.1s);
+  animation-play-state: paused;
+}
+html[data-module="stack"] .circuit__pulses path {
+  animation-play-state: running;
+}
+@keyframes pulse-run {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+.space-bg__glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 1.2s var(--ease-in-out),
+    visibility 0s linear 1.2s;
+  background:
+    radial-gradient(55% 45% at 72% 42%, color-mix(in oklab, var(--project-accent) 20%, transparent), transparent 70%),
+    radial-gradient(42% 40% at 18% 78%, color-mix(in oklab, var(--project-accent) 11%, transparent), transparent 70%);
+}
+html[data-module="projects"] .space-bg__glow {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 1.2s var(--ease-in-out);
+}
+@media (max-width: 767px) {
+  .circuit__pulses {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .circuit__pulses {
+    display: none;
+  }
+  .space-bg__twinkle {
+    animation: none;
+    opacity: 0.3;
+  }
+}
+
+/* --- Home panels as holographic windows --- */
+.cpanel {
+  --accent: var(--color-neon);
+}
+.cpanel[data-accent="teal"] {
+  --accent: var(--color-teal);
+}
+.cpanel[data-accent="lime"] {
+  --accent: var(--color-lime);
+}
+
+/* Glass edge: gradient highlight along the top-left, soft inner reflection. */
+.cpanel__glass.screen {
+  background:
+    linear-gradient(115deg, rgb(255 255 255 / 0.05) 0, transparent 24%),
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--color-panel) 92%, transparent),
+      color-mix(in oklab, var(--color-abyss) 84%, transparent)
+    );
+}
+.cpanel__glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 60% at 20% -10%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    inset 1px 0 0 color-mix(in oklab, var(--accent) 28%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+/* Window chrome. */
+.wchrome {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  height: 1.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.9rem;
+  pointer-events: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--accent) 24%, transparent);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--accent) 14%, transparent),
+    color-mix(in oklab, var(--accent) 4%, transparent)
+  );
+}
+.wchrome__dots {
+  display: flex;
+  gap: 0.32rem;
+}
+.wchrome__dots i {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-neon);
+}
+.wchrome__dots i:nth-child(2) {
+  background: var(--color-teal);
+}
+.wchrome__dots i:nth-child(3) {
+  background: var(--color-lime);
+}
+.wchrome__title {
+  font: 500 0.62rem/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--color-mute);
+}
+.cpanel__full {
+  inset: 1.9rem 0 0 0;
+}
+
+/* Depth layers: only the active panel, fine pointers, motion allowed. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cpanel[data-slot="center"] .pfull {
+    perspective: 900px;
+  }
+  .cpanel[data-slot="center"] .depth-1 {
+    transform: translateZ(14px);
+    translate: calc(var(--nx, 0) * -4px * var(--pdamp, 1)) calc(var(--ny, 0) * -3px * var(--pdamp, 1));
+    transition: translate 0.35s var(--ease-out);
+  }
+  .cpanel[data-slot="center"] .depth-2 {
+    transform: translateZ(6px);
+    translate: calc(var(--nx, 0) * -2px * var(--pdamp, 1)) calc(var(--ny, 0) * -1.5px * var(--pdamp, 1));
+    transition: translate 0.35s var(--ease-out);
+  }
+}
+
+/* Presentation: terminal prompt types itself, then the output appears. */
+.term-line {
+  display: flex;
+  align-items: center;
+  gap: 0.55ch;
+  margin: 0 0 0.9rem;
+  font: 500 0.78rem/1 var(--font-mono);
+  color: var(--color-neon-hi);
+}
+.term-line__ps1 {
+  color: var(--color-teal);
+}
+.term-line__cmd {
+  display: inline-block;
+  width: 6ch;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.term-line::after {
+  content: "";
+  width: 0.6ch;
+  height: 1.05em;
+  background: var(--color-neon-hi);
+  animation: blink 1s steps(2, end) infinite;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .term-line__cmd {
+    width: 0;
+    animation: type-cmd 0.75s steps(6, end) calc(var(--i, 0) * 380ms + 0.7s) forwards;
+  }
+  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .term-out {
+    animation: term-in 0.55s var(--ease-out) calc(var(--i, 0) * 380ms + 1.45s) both;
+  }
+  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(3) {
+    animation-delay: calc(var(--i, 0) * 380ms + 1.55s);
+  }
+  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(4) {
+    animation-delay: calc(var(--i, 0) * 380ms + 1.65s);
+  }
+  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(5) {
+    animation-delay: calc(var(--i, 0) * 380ms + 1.75s);
+  }
+  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(6) {
+    animation-delay: calc(var(--i, 0) * 380ms + 1.85s);
+  }
+  @keyframes type-cmd {
+    to {
+      width: 6ch;
+    }
+  }
+  @keyframes term-in {
+    from {
+      opacity: 0;
+      scale: 0.985;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .term-line::after {
+    animation: none;
+  }
+}
+
+/* Technology ticker. */
+.ticker {
+  margin-top: 1.1rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+.ticker__track {
+  display: flex;
+  width: max-content;
+  margin: 0;
+  padding: 0.15rem 0;
+  list-style: none;
+  animation: ticker-move 80s linear infinite;
+  animation-play-state: paused;
+}
+:is(.cpanel[data-slot="center"], .acc[data-open="true"]) .ticker__track {
+  animation-play-state: running;
+}
+.ticker:hover .ticker__track,
+.ticker:focus-within .ticker__track {
+  animation-play-state: paused;
+}
+.ticker__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 1.7rem;
+  font: 500 0.7rem/1 var(--font-mono);
+  letter-spacing: 0.06em;
+  color: var(--color-mute);
+  white-space: nowrap;
+}
+.ticker__logo {
+  width: 0.95rem;
+  height: 0.95rem;
+  background: var(--color-neon-hi);
+  -webkit-mask: var(--logo) center / contain no-repeat;
+  mask: var(--logo) center / contain no-repeat;
+}
+.ticker__initials {
+  font-size: 0.6rem;
+  color: var(--color-neon-hi);
+}
+@keyframes ticker-move {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker__track {
+    animation: none;
+  }
+}
+
+/* About: scanning photo frame, staged paragraphs. */
+.about-frame {
+  position: relative;
+  padding: 1.35rem 0.55rem 0.55rem;
+  width: fit-content;
+}
+.about-frame__label {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.55rem;
+  margin: 0;
+  font: 500 0.6rem/1 var(--font-mono);
+  letter-spacing: 0.2em;
+  color: var(--color-teal);
+}
+.xhair {
+  position: absolute;
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 0 solid var(--color-teal);
+}
+.xhair--tl {
+  top: 1.05rem;
+  left: 0.2rem;
+  border-width: 2px 0 0 2px;
+}
+.xhair--tr {
+  top: 1.05rem;
+  right: 0.2rem;
+  border-width: 2px 2px 0 0;
+}
+.xhair--bl {
+  bottom: 0.2rem;
+  left: 0.2rem;
+  border-width: 0 0 2px 2px;
+}
+.xhair--br {
+  bottom: 0.2rem;
+  right: 0.2rem;
+  border-width: 0 2px 2px 0;
+}
+.about-frame__scan {
+  position: absolute;
+  inset: 1.35rem 0.55rem 0.55rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+.about-frame__scan::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 47%,
+    color-mix(in oklab, var(--color-teal) 28%, transparent) 49.5%,
+    var(--color-neon-hi) 50%,
+    transparent 51%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translateY(-50%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .about-frame__scan::before {
+    animation: scan-y 3.4s linear infinite;
+  }
+  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .stagger {
+    animation: line-in 0.6s var(--ease-out) calc(0.25s + var(--k, 0) * 0.2s) both;
+  }
+  @keyframes scan-y {
+    0% {
+      transform: translateY(-50%);
+      opacity: 0;
+    }
+    10%,
+    90% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translateY(50%);
+      opacity: 0;
+    }
+  }
+  @keyframes line-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+}
+
+/* Interests: modules that light up, tiny star field in the Astronomy one. */
+.interest-grid li {
+  position: relative;
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.interest-grid li > :not(.starfield) {
+  position: relative;
+}
+.interest-grid li:hover,
+.interest-grid li:focus-within {
+  border-left-color: var(--color-lime);
+  background: color-mix(in oklab, var(--color-lime) 8%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-lime) 30%, transparent),
+    0 0 18px color-mix(in oklab, var(--color-lime) 16%, transparent);
+}
+.interest-grid li h3,
+.interest-grid li p {
+  transition: color 0.25s ease;
+}
+.interest-grid li:hover h3,
+.interest-grid li:focus-within h3 {
+  color: var(--color-lime);
+}
+.interest-grid li:hover p,
+.interest-grid li:focus-within p {
+  color: var(--color-ink);
+}
+.starfield {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.starfield span {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--color-neon-hi);
+  opacity: 0.35;
+  animation: star-twinkle 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--k) * -0.55s);
+}
+@keyframes star-twinkle {
+  to {
+    opacity: 0.9;
+    transform: scale(1.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .starfield span {
+    animation: none;
+  }
+}
+
+/* Floating widgets (desktop only): small ornamental tags straddling the active panel's edges. */
+.pwidgets {
+  display: none;
+}
+@media (min-width: 768px) {
+  .cpanel[data-slot="center"] .pwidgets {
+    display: block;
+  }
+}
+.pw {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 1.1rem;
+  padding: 0 0.55rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--accent) 42%, transparent);
+  background: color-mix(in oklab, var(--color-abyss) 88%, transparent);
+  font: 500 0.58rem/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.pw--bars {
+  top: -0.55rem;
+  right: 11.5rem;
+  gap: 3px;
+}
+.pw--bars span {
+  width: 3px;
+  height: 0.7rem;
+  background: var(--accent);
+  transform-origin: 50% 100%;
+  animation: bar-bounce 1.7s ease-in-out infinite alternate;
+  animation-delay: calc(var(--k) * -0.35s);
+}
+.pw--hex {
+  top: -0.55rem;
+  right: 2rem;
+  width: 8rem;
+}
+.pw__hex-track {
+  display: inline-block;
+  animation: hex-scroll 14s linear infinite;
+}
+.pw--ring {
+  bottom: -0.55rem;
+  left: 2rem;
+  padding: 0 0.35rem;
+}
+.pw--ring svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.2;
+}
+.pw__ring-base {
+  opacity: 0.3;
+}
+.pw__ring-arc {
+  stroke-dasharray: 16 41;
+  stroke-linecap: round;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ring-spin 3.6s linear infinite;
+}
+.pw--leader {
+  bottom: -0.55rem;
+  right: 2rem;
+  gap: 0.5rem;
+}
+.pw__line {
+  width: 1.8rem;
+  height: 1px;
+  background: var(--accent);
+  transform-origin: 0 50%;
+  animation: line-grow 3s ease-in-out infinite alternate;
+}
+@keyframes bar-bounce {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes hex-scroll {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+@keyframes ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes line-grow {
+  from {
+    transform: scaleX(0.35);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw--bars span,
+  .pw__hex-track,
+  .pw__ring-arc,
+  .pw__line {
+    animation: none;
+  }
+}
+
+@media (max-height: 760px) {
+  .cpanel__full:has(.interest-grid) {
+    padding-block: 0.55rem;
+  }
+}
+
+/* Faint local scrim behind EXPLORE text blocks, so stars and constellation lines never cut into text. */
+.stack__head,
+.projects__head,
+.exp-head__titles,
+.experience__sub,
+.contact__col,
+.project__body {
+  position: relative;
+  isolation: isolate;
+}
+.stack__head::before,
+.projects__head::before,
+.exp-head__titles::before,
+.experience__sub::before,
+.contact__col::before,
+.project__body::before {
+  content: "";
+  position: absolute;
+  inset: -0.9rem -1.2rem;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 14px;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-abyss) 80%, transparent) 60%, transparent 100%);
+}
+
+/* Decorative loops rest while the page is scrolling (set by src/lib/ambient.ts), so the frame budget
+   goes to the keyboard glide. */
+html[data-scrolling] .atmo__shafts,
+html[data-scrolling] .space-bg__twinkle,
+html[data-scrolling] .fog,
+html[data-scrolling] .scan-sweep,
+html[data-scrolling] .circuit__pulses path {
+  animation-play-state: paused;
+}
+
+/* ------------------------------------------------------------------ */
+/* Phase 5.2: spatial home modules (no slides)                         */
+/* ------------------------------------------------------------------ */
+
+/* The glass box is gone: the glass element only carries the entrance animation and the layers. */
+.cpanel__glass.screen {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  overflow: visible;
+}
+.cpanel__glass::before,
+.cpanel[data-slot="center"] .cpanel__glass::after {
+  content: none;
+  animation: none;
+}
+
+/* Plate: a chamfered polygon. The segmented outline is the element itself (clipped); the fill is an
+   inset copy of the same polygon, so the border follows the cuts. No blur anywhere. */
+.cpanel {
+  --poly-a: polygon(
+    28px 0,
+    calc(100% - 96px) 0,
+    calc(100% - 76px) 16px,
+    100% 16px,
+    100% calc(100% - 28px),
+    calc(100% - 28px) 100%,
+    70px 100%,
+    52px calc(100% - 14px),
+    0 calc(100% - 14px),
+    0 28px
+  );
+  --poly-b: polygon(
+    34px 0,
+    calc(100% - 34px) 0,
+    100% 34px,
+    100% calc(50% - 26px),
+    calc(100% - 12px) calc(50% - 14px),
+    calc(100% - 12px) calc(50% + 14px),
+    100% calc(50% + 26px),
+    100% calc(100% - 34px),
+    calc(100% - 34px) 100%,
+    34px 100%,
+    0 calc(100% - 34px),
+    0 calc(50% + 26px),
+    12px calc(50% + 14px),
+    12px calc(50% - 14px),
+    0 calc(50% - 26px),
+    0 34px
+  );
+  /* Outline rings: the outer polygon plus the same polygon moved 2px inward, filled evenodd. */
+  --ring-a: polygon(
+    evenodd,
+    28px 0,
+    calc(100% - 96px) 0,
+    calc(100% - 76px) 16px,
+    100% 16px,
+    100% calc(100% - 28px),
+    calc(100% - 28px) 100%,
+    70px 100%,
+    52px calc(100% - 14px),
+    0 calc(100% - 14px),
+    0 28px,
+    28px 0,
+    30px 2px,
+    calc(100% - 98px) 2px,
+    calc(100% - 77px) 18px,
+    calc(100% - 2px) 18px,
+    calc(100% - 2px) calc(100% - 30px),
+    calc(100% - 30px) calc(100% - 2px),
+    72px calc(100% - 2px),
+    53px calc(100% - 16px),
+    2px calc(100% - 16px),
+    2px 30px,
+    30px 2px
+  );
+  --ring-b: polygon(
+    evenodd,
+    34px 0,
+    calc(100% - 34px) 0,
+    100% 34px,
+    100% calc(50% - 26px),
+    calc(100% - 12px) calc(50% - 14px),
+    calc(100% - 12px) calc(50% + 14px),
+    100% calc(50% + 26px),
+    100% calc(100% - 34px),
+    calc(100% - 34px) 100%,
+    34px 100%,
+    0 calc(100% - 34px),
+    0 calc(50% + 26px),
+    12px calc(50% + 14px),
+    12px calc(50% - 14px),
+    0 calc(50% - 26px),
+    0 34px,
+    34px 0,
+    36px 2px,
+    calc(100% - 36px) 2px,
+    calc(100% - 2px) 36px,
+    calc(100% - 2px) calc(50% - 27px),
+    calc(100% - 14px) calc(50% - 15px),
+    calc(100% - 14px) calc(50% + 15px),
+    calc(100% - 2px) calc(50% + 27px),
+    calc(100% - 2px) calc(100% - 36px),
+    calc(100% - 36px) calc(100% - 2px),
+    36px calc(100% - 2px),
+    2px calc(100% - 36px),
+    2px calc(50% + 27px),
+    14px calc(50% + 15px),
+    14px calc(50% - 15px),
+    2px calc(50% - 27px),
+    2px 36px,
+    36px 2px
+  );
+  --poly: var(--poly-a);
+  --ring: var(--ring-a);
+}
+.cpanel[data-panel="interests"] {
+  --poly: var(--poly-b);
+  --ring: var(--ring-b);
+}
+.shell {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  clip-path: var(--poly);
+  background:
+    radial-gradient(120% 60% at 18% -10%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 60%),
+    linear-gradient(115deg, rgb(255 255 255 / 0.05) 0, transparent 24%),
+    linear-gradient(160deg, color-mix(in oklab, var(--color-panel) 95%, transparent), color-mix(in oklab, var(--color-abyss) 92%, transparent));
+}
+.shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: var(--ring);
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0 14%,
+    transparent 14% 17%,
+    var(--accent) 17% 62%,
+    transparent 62% 65%,
+    var(--accent) 65% 100%
+  );
+}
+/* Teasers are small fragments, not full-height plates. */
+.cpanel[data-slot="left"] .shell,
+.cpanel[data-slot="right"] .shell {
+  inset: 22% 0;
+}
+.cpanel[data-slot="left"] .corner,
+.cpanel[data-slot="right"] .corner,
+.cpanel[data-panel="about"] .corner,
+.cpanel[data-panel="interests"] .corner {
+  display: none;
+}
+/* Presentation (active): no plate. Corner brackets and two thin guide lines only. */
+.cpanel[data-panel="presentation"][data-slot="center"] .shell {
+  clip-path: none;
+  background:
+    linear-gradient(to right, var(--accent), transparent 38%) top left / 100% 1px no-repeat,
+    linear-gradient(to left, var(--accent), transparent 38%) bottom right / 100% 1px no-repeat;
+}
+.cpanel[data-panel="presentation"][data-slot="center"] .shell::before {
+  content: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cpanel[data-slot="center"]:not([data-panel="presentation"]) .shell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 36%, color-mix(in oklab, var(--accent) 20%, transparent) 50%, transparent 64%);
+    transform: translate3d(-110%, 0, 0);
+    animation: panel-sweep 0.9s var(--ease-out) 0.1s both;
+  }
+}
+
+.cpanel__full {
+  inset: 0;
+  padding: 1.9rem 2.3rem 1.6rem;
+}
+
+/* Title tag: a floating chamfered piece over the plate's top edge (own depth layer). */
+.wchrome {
+  inset: auto;
+  top: -0.8rem;
+  left: 1.7rem;
+  width: auto;
+  height: 1.6rem;
+  padding: 0 1.2rem 0 0.8rem;
+  border: 0;
+  background: color-mix(in oklab, var(--accent) 24%, var(--color-abyss));
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%);
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cpanel[data-slot="center"] .wchrome {
+    transform: perspective(900px) translateZ(22px);
+    translate: calc(var(--nx, 0) * -6px * var(--pdamp, 1)) calc(var(--ny, 0) * -4px * var(--pdamp, 1));
+    transition: translate 0.35s var(--ease-out);
+  }
+}
+
+/* --- Presentation: the name is the layout --- */
+.pfull--presentation {
+  position: relative;
+  isolation: isolate;
+}
+.pfull--presentation::before {
+  content: "";
+  position: absolute;
+  inset: -2.5rem -4rem;
+  z-index: -1;
+  pointer-events: none;
+  background: color-mix(in oklab, var(--color-abyss) 92%, transparent);
+  -webkit-mask-image: radial-gradient(closest-side at 50% 50%, #000 70%, transparent 100%);
+  mask-image: radial-gradient(closest-side at 50% 50%, #000 70%, transparent 100%);
+}
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  text-wrap: nowrap;
+}
+.hero__greeting {
+  font: 500 0.82rem/1 var(--font-mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-neon-hi);
+}
+.hero__name {
+  display: inline-block;
+  font-size: clamp(2.2rem, min(5vw, 12vh), 4.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+.accordion .hero__name {
+  font-size: clamp(2rem, 10.5vw, 3.2rem);
+  text-wrap: balance;
+}
+.accordion .hero {
+  text-wrap: balance;
+}
+.screen__role {
+  position: relative;
+  padding-bottom: 0.55rem;
+}
+.scan-underline {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: min(100%, 24rem);
+  height: 1px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--color-teal) 45%, transparent);
+}
+.scan-underline::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, var(--color-neon-hi), transparent);
+  transform: translateX(-100%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .scan-underline::after {
+    animation: underline-scan 2.8s var(--ease-in-out) infinite;
+  }
+  @keyframes underline-scan {
+    to {
+      transform: translateX(340%);
+    }
+  }
+}
+
+/* --- About: chamfered scanner frame and facets --- */
+.about-photo {
+  overflow: visible;
+  padding: 2px;
+  border-radius: 0;
+  box-shadow: none;
+  background: linear-gradient(135deg, var(--color-teal), color-mix(in oklab, var(--color-teal) 25%, transparent) 55%, var(--color-teal));
+  clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+}
+.about-photo__inner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  clip-path: polygon(18.6px 0, 100% 0, 100% calc(100% - 18.6px), calc(100% - 18.6px) 100%, 0 100%, 0 18.6px);
+}
+.facets {
+  margin-top: 0.9rem;
+}
+.facets__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.facet-tab {
+  appearance: none;
+  min-height: 2.2rem;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  background: color-mix(in oklab, var(--accent) 12%, var(--color-abyss));
+  color: var(--color-mute);
+  font: 600 0.66rem/1 var(--font-mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.facet-tab:hover:not([aria-selected="true"]) {
+  background: color-mix(in oklab, var(--accent) 26%, var(--color-abyss));
+  color: var(--color-ink);
+}
+.facet-tab[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--color-abyss);
+}
+.facet-tab:focus-visible {
+  clip-path: none;
+  outline: 2px solid var(--color-neon-hi);
+  outline-offset: 2px;
+}
+.facet-panel {
+  margin-top: 1rem;
+  min-height: 7.4rem;
+}
+.facet-panel[hidden] {
+  display: none;
+}
+.facet-text {
+  margin: 0;
+  max-width: none;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--color-ink);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .facet-panel:not([hidden]) .facet-text {
+    animation: type-reveal 0.55s steps(30, end) calc(var(--i, 0) * 380ms + 0.6s) both;
+  }
+  @keyframes type-reveal {
+    from {
+      clip-path: inset(0 100% 0 0);
+      opacity: 0.3;
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+      opacity: 1;
+    }
+  }
+}
+
+/* --- Interests: orbital system --- */
+.pfull--interests .screen__title {
+  margin-bottom: 0.2rem;
+}
+.orbit-layout {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2.2rem;
+}
+.orbit {
+  --osz: clamp(12.5rem, 39svh, 19rem);
+  position: relative;
+  width: var(--osz);
+  height: var(--osz);
+  flex: none;
+}
+.orbit__path {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  border: 1px dashed color-mix(in oklab, var(--color-lime) 30%, transparent);
+  border-radius: 50%;
+}
+.orbit__path--1 {
+  width: calc(var(--osz) * 0.54);
+  height: calc(var(--osz) * 0.54);
+}
+.orbit__path--2 {
+  width: calc(var(--osz) * 0.84);
+  height: calc(var(--osz) * 0.84);
+}
+.orbit__ring {
+  position: absolute;
+  inset: 0;
+  animation: orbit-spin var(--dur) linear infinite var(--dir, normal);
+  animation-play-state: paused;
+}
+.orbit__ring--1 {
+  --dur: 90s;
+  --r: calc(var(--osz) * 0.27);
+}
+.orbit__ring--2 {
+  --dur: 90s;
+  --r: calc(var(--osz) * 0.42);
+}
+.orbit__node {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: rotate(var(--a)) translateX(var(--r)) rotate(calc(var(--a) * -1));
+}
+.orbit__btn,
+.orbit__sun {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid color-mix(in oklab, var(--color-lime) 45%, transparent);
+  color: var(--color-lime);
+  cursor: pointer;
+  transition:
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+/* Generous, stable hit area: 46px button, about 58px target. */
+.orbit__btn::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+}
+.orbit__btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--color-panel) 94%, var(--color-lime));
+  animation: orbit-unspin var(--dur) linear infinite var(--dir, normal);
+  animation-play-state: paused;
+}
+.orbit__icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.orbit__label {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  left: 50%;
+  translate: -50% 0;
+  width: max-content;
+  max-width: 6.4rem;
+  padding: 0.12rem 0.32rem;
+  border-radius: 3px;
+  /* A small backing keeps the label legible where the dashed orbit lines cross it. */
+  background: color-mix(in oklab, var(--color-abyss) 88%, transparent);
+  font: 500 0.62rem/1.15 var(--font-mono);
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: var(--color-ink);
+  pointer-events: none;
+  transition: color 0.25s ease;
+}
+.orbit__sun {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: 31%;
+  aspect-ratio: 1;
+  gap: 0.1rem;
+  align-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  border-color: color-mix(in oklab, var(--color-lime) 65%, transparent);
+  color: var(--color-lime);
+  background: radial-gradient(
+    circle at 36% 30%,
+    color-mix(in oklab, var(--color-lime) 36%, var(--color-abyss)),
+    color-mix(in oklab, var(--color-neon) 14%, var(--color-abyss)) 72%
+  );
+  box-shadow:
+    0 0 26px color-mix(in oklab, var(--color-lime) 34%, transparent),
+    0 0 64px color-mix(in oklab, var(--color-neon) 16%, transparent);
+}
+.orbit__sun .orbit__icon {
+  position: relative;
+  width: 1.7rem;
+  height: 1.7rem;
+}
+.orbit__sun .orbit__label {
+  position: relative;
+  top: auto;
+  left: auto;
+  translate: none;
+  width: auto;
+  padding: 0;
+  background: none;
+  color: var(--color-ink);
+}
+.orbit__btn:hover,
+.orbit__btn[data-preview="true"],
+.orbit__sun:hover,
+.orbit__sun[data-preview="true"] {
+  border-color: var(--color-lime);
+  box-shadow: 0 0 18px color-mix(in oklab, var(--color-lime) 40%, transparent);
+}
+.orbit__btn:hover .orbit__label,
+.orbit__btn[data-preview="true"] .orbit__label {
+  color: var(--color-ink);
+}
+.orbit__btn[aria-pressed="true"] {
+  background: var(--color-lime);
+  color: var(--color-abyss);
+  border-color: var(--color-lime);
+}
+.orbit__btn[aria-pressed="true"] .orbit__label {
+  color: var(--color-ink);
+}
+.orbit__sun[aria-pressed="true"] {
+  box-shadow:
+    0 0 34px color-mix(in oklab, var(--color-lime) 55%, transparent),
+    0 0 90px color-mix(in oklab, var(--color-neon) 26%, transparent);
+}
+.orbit__btn:focus-visible,
+.orbit__sun:focus-visible {
+  outline: 2px solid var(--color-neon-hi);
+  outline-offset: 3px;
+}
+:is(.cpanel[data-slot="center"], .acc[data-open="true"]) .orbit__ring,
+:is(.cpanel[data-slot="center"], .acc[data-open="true"]) .orbit__btn {
+  animation-play-state: running;
+}
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes orbit-unspin {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orbit__ring,
+  .orbit__btn {
+    animation: none;
+  }
+}
+.orbit-readout {
+  min-height: 8.5rem;
+  padding-left: 1.2rem;
+  border-left: 2px solid color-mix(in oklab, var(--color-lime) 50%, transparent);
+}
+.orbit-readout__item[hidden] {
+  display: none;
+}
+.orbit-readout__item h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--color-lime);
+}
+.orbit-readout__item p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--color-ink);
+}
+
+/* While the pointer is over the active panel its layers rest, so no target moves under the cursor. */
+html[data-panel-hover] .cpanel[data-slot="center"] {
+  --pdamp: 0;
+}
+
+/* Phone accordion: the orbit becomes a plain two-column grid of buttons (no rotation). */
+.acc .orbit-layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+.acc .orbit {
+  width: auto;
+  height: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+.acc .orbit__path {
+  display: none;
+}
+.acc .orbit__ring {
+  display: contents;
+  animation: none;
+}
+.acc .orbit__node {
+  position: static;
+  width: auto;
+  height: auto;
+  transform: none;
+}
+.acc .orbit__btn,
+.acc .orbit__sun {
+  position: static;
+  translate: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 3rem;
+  aspect-ratio: auto;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  animation: none;
+  text-align: left;
+  overflow: visible;
+}
+.acc .orbit__sun {
+  grid-column: 1 / -1;
+}
+.acc .orbit__label,
+.acc .orbit__sun .orbit__label {
+  position: static;
+  translate: none;
+  width: auto;
+  padding: 0;
+  background: none;
+  font-size: 0.78rem;
+  text-align: left;
+  color: inherit;
+}
+.acc .orbit__btn[aria-pressed="true"] .orbit__label {
+  color: var(--color-abyss);
+}
+.acc .orbit-readout {
+  min-height: 0;
+}
+
+/* Phase 5.2 contrast adjustments (measured over the globe): lighter role line, denser phone rows. */
+.screen__role {
+  color: color-mix(in oklab, var(--color-teal) 55%, var(--color-ink));
+}
+.accordion .acc {
+  background: color-mix(in oklab, var(--color-abyss) 80%, transparent);
+}
+.acc .orbit__btn[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--color-lime) 26%, var(--color-abyss));
+  color: var(--color-lime);
+}
+.acc .orbit__btn .orbit__label,
+.acc .orbit__btn[aria-pressed="true"] .orbit__label,
+.acc .orbit__sun .orbit__label {
+  color: var(--color-ink);
+}
+/* The sun's label sits over its own twinkling stars: give it a backing and keep the stars faint. */
+.orbit__sun .starfield {
+  opacity: 0.5;
+}
+.orbit__sun .orbit__label {
+  padding: 0.08rem 0.32rem;
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--color-abyss) 62%, transparent);
+}
+.acc .orbit__sun .orbit__label {
+  padding: 0;
+  background: none;
+}
+
+/* The full-size ring wrappers and path outlines must never sit between the pointer and a node. */
+.orbit__ring,
+.orbit__node,
+.orbit__path {
+  pointer-events: none;
+}
+.orbit__btn,
+.orbit__sun {
+  pointer-events: auto;
 }
