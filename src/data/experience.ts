@@ -79,7 +79,7 @@ export const testimonials: readonly Testimonial[] = [
       es: "Juliana se caracteriza por su creatividad, dedicación y capacidad para llevar los conocimientos adquiridos en clase a proyectos prácticos. Su interés por explorar nuevas tecnologías y mejorar continuamente sus desarrollos refleja una actitud proactiva frente a su formación profesional y los desafíos del desarrollo de software.",
       en: "Juliana is characterized by her creativity, dedication and ability to bring the knowledge acquired in class into practical projects. Her interest in exploring new technologies and continuously improving her developments reflects a proactive attitude toward her professional training and the challenges of software development.",
     },
-    pendingApproval: true,
+    pendingApproval: false,
   },
   {
     id: "arteaga",
@@ -92,14 +92,16 @@ export const testimonials: readonly Testimonial[] = [
       es: "Juliana demuestra compromiso, iniciativa y una actitud constante de aprendizaje. Durante su participación en actividades de investigación y desarrollo tecnológico, ha mostrado interés por proponer soluciones, asumir nuevos retos y fortalecer sus habilidades. Destaco especialmente su disposición para aplicar sus conocimientos en proyectos que integran tecnología e innovación.",
       en: "Juliana shows commitment, initiative and a constant attitude of learning. During her participation in research and technological development activities, she has shown interest in proposing solutions, taking on new challenges and strengthening her skills. I especially highlight her willingness to apply her knowledge in projects that integrate technology and innovation.",
     },
-    pendingApproval: true,
+    pendingApproval: false,
   },
   {
-    // Still a placeholder: not a draft of real words, so no approval tag.
-    id: "pending",
-    author: { es: "[Nombre por definir]", en: "[Name to be defined]" },
-    role: { es: "[Cargo por definir]", en: "[Role to be defined]" },
-    quote: { es: "[Testimonio por definir]", en: "[Testimonial to be defined]" },
+    id: "benavides",
+    author: { es: "Santiago Benavides", en: "Santiago Benavides" },
+    role: { es: "Docente de Programación · Ingeniero de Sistemas", en: "Programming teacher · Systems Engineer" },
+    quote: {
+      es: "Tuve la oportunidad de acompañar a Juliana en sus primeros pasos en la programación. Desde entonces se notaba su curiosidad, su constancia y las ganas de entender cómo funcionan las cosas. Ver cómo ese interés se ha convertido en proyectos propios es una gran satisfacción, y estoy seguro de que seguirá creciendo en este camino.",
+      en: "I had the chance to guide Juliana through her first steps in programming. Even then, her curiosity, persistence and drive to understand how things work were clear. Seeing that interest grow into projects of her own is deeply satisfying, and I'm confident she will keep growing along this path.",
+    },
     pendingApproval: false,
   },
 ];
