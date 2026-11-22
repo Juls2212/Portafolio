@@ -1,5 +1,6 @@
 "use client";
 
+import { DecodeText } from "@/components/DecodeText";
 import { academicCards } from "@/data/experience";
 import { modules } from "@/data/modules";
 import { useLang, useT } from "@/i18n/language-context";
@@ -29,14 +30,14 @@ export function ExperienceSection() {
   return (
     <section id="experience" className="experience" aria-labelledby="experience-title">
       <div className="experience__inner">
-        <header className="exp-head">
+        <header className="exp-head" data-reveal>
           <span className="exp-head__numeral" aria-hidden="true">
             {moduleNumber}
           </span>
           <div className="exp-head__titles">
             <p className="exp-head__label">{moduleNumber} —</p>
             <h2 id="experience-title" className="exp-head__title">
-              {t.experience.title}
+              <DecodeText text={t.experience.title} />
             </h2>
           </div>
         </header>
@@ -44,7 +45,7 @@ export function ExperienceSection() {
 
         <ul className="academic-grid">
           {academicCards.map((card) => (
-            <li key={card.id} className="academic" data-size={card.size}>
+            <li key={card.id} className="academic" data-size={card.size} data-reveal>
               <span className="academic__tile">
                 <CardIcon kind={card.icon} />
               </span>
