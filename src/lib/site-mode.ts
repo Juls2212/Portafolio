@@ -132,6 +132,11 @@ function subscribe(listener: () => void) {
   };
 }
 
+/** Imperative access for render loops (the globe): no React involved. */
+export const subscribeSiteMode = subscribe;
+export const getSiteMode = getMode;
+export const getSitePhase = (): string => phase;
+
 export function useSiteMode(): SiteMode {
   return useSyncExternalStore(subscribe, getMode, () => "home" as SiteMode);
 }
