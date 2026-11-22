@@ -1,4 +1,6 @@
+import { AtmosphereBack, AtmosphereFront } from "@/components/atmosphere/Atmosphere";
 import { Hud } from "@/components/Hud";
+import { HudFrame } from "@/components/HudFrame";
 import { HoloRoom } from "@/components/HoloRoom";
 import { KeyboardLayer } from "@/components/keyboard/KeyboardLayer";
 import { StackSection } from "@/components/keyboard/StackSection";
@@ -14,8 +16,11 @@ export default function Home() {
     <>
       <SkipLink />
       <Hud />
-      {/* The one fixed, lazily loaded WebGL canvas (3D keyboard). Persists across modules. */}
+      <HudFrame />
+      <AtmosphereBack />
+      {/* The one fixed, lazily loaded WebGL canvas (HOME globe, 3D keyboard). Persists across modules. */}
       <KeyboardLayer />
+      <AtmosphereFront />
       <main id="content" tabIndex={-1}>
         <HoloRoom assets={assets} />
         <div id="explore-root">
