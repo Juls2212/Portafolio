@@ -19,6 +19,11 @@ export const es: Dictionary = {
     lineLevel: "> nivel 01 · sala principal",
     levelLabel: "Nivel 01 · Sala principal",
     back: "Volver al inicio",
+    sysOnline: "SYS · EN LÍNEA",
+    scroll: "DESPL.",
+  },
+  globe: {
+    nodes: ["NODO 01 · SEGURIDAD", "NODO 02 · IA", "NODO 03 · NUBE"],
   },
   presentation: {
     eyebrow: "P/01 · Presentación",
@@ -33,14 +38,18 @@ export const es: Dictionary = {
   about: {
     eyebrow: "P/02 · Perfil",
     title: "Sobre mí",
-    paragraphs: [
-      "Soy desarrolladora Full Stack y disfruto enfrentar nuevos retos, resolver problemas y encontrar distintas formas de convertir una idea en algo funcional. Me interesa especialmente el diseño de arquitecturas de software y la creación de soluciones que sean eficientes, seguras y bien estructuradas.",
-      "Me gusta explorar tecnologías y aprender mientras desarrollo proyectos. Tengo un interés particular por la ciberseguridad, la inteligencia artificial y la realidad virtual, áreas que me permiten experimentar con nuevas formas de crear aplicaciones y experiencias interactivas.",
+    facets: [
+      { label: "Retos", text: "Soy desarrolladora Full Stack y disfruto enfrentar nuevos retos, resolver problemas y encontrar distintas formas de convertir una idea en algo funcional." },
+      { label: "Arquitectura", text: "Me interesa especialmente el diseño de arquitecturas de software y la creación de soluciones que sean eficientes, seguras y bien estructuradas." },
+      { label: "Explorar", text: "Me gusta explorar tecnologías y aprender mientras desarrollo proyectos." },
+      { label: "Intereses", text: "Tengo un interés particular por la ciberseguridad, la inteligencia artificial y la realidad virtual, áreas que me permiten experimentar con nuevas formas de crear aplicaciones y experiencias interactivas." },
     ],
+    facetsLabel: "Facetas del perfil",
     teaserTitle: "Mi lado de software",
     teaserLine: "Arquitectura, ciberseguridad, IA y nube.",
     photoAlt: "Retrato de Juliana Peñafiel",
     photoPlaceholder: "[Foto por definir]",
+    profileLabel: "PERFIL",
   },
   interests: {
     eyebrow: "P/03 · Intereses",
@@ -54,6 +63,7 @@ export const es: Dictionary = {
       { label: "Teatro", detail: "Siempre me ha gustado actuar y he tenido la oportunidad de participar en varias obras." },
       { label: "Cubos Rubik", detail: "Me encanta resolverlos. Incluso he participado en torneos locales y gané un premio." },
     ],
+    orbitLabel: "Intereses fuera del código",
     teaserTitle: "Fuera del código",
     teaserLine: "Astronomía, rock, deporte, teatro y más.",
   },
@@ -66,6 +76,8 @@ export const es: Dictionary = {
     open: "Abrir",
     openHint: "abrir ▸",
     active: "Panel activo:",
+    windows: { presentation: "presentacion.exe", about: "perfil.exe", interests: "intereses.exe" },
+    widgetLabel: "módulo activo",
   },
   projects: {
     eyebrow: "Módulo 03",
