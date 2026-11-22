@@ -11,6 +11,11 @@ export interface InterestItem {
   detail: string;
 }
 
+export interface Facet {
+  label: string;
+  text: string;
+}
+
 export interface Dictionary {
   meta: { title: string; description: string };
   a11y: {
@@ -27,6 +32,11 @@ export interface Dictionary {
     lineLevel: string;
     levelLabel: string;
     back: string;
+    sysOnline: string;
+    scroll: string;
+  };
+  globe: {
+    nodes: readonly [string, string, string];
   };
   presentation: {
     eyebrow: string;
@@ -40,17 +50,21 @@ export interface Dictionary {
   about: {
     eyebrow: string;
     title: string;
-    paragraphs: readonly [string, string];
+    /** The approved About copy, one sentence (or pair) per facet. */
+    facets: readonly [Facet, Facet, Facet, Facet];
+    facetsLabel: string;
     teaserTitle: string;
     teaserLine: string;
     photoAlt: string;
     photoPlaceholder: string;
+    profileLabel: string;
   };
   interests: {
     eyebrow: string;
     name: string;
     title: string;
     items: readonly [InterestItem, InterestItem, InterestItem, InterestItem, InterestItem, InterestItem];
+    orbitLabel: string;
     teaserTitle: string;
     teaserLine: string;
   };
@@ -63,6 +77,8 @@ export interface Dictionary {
     open: string;
     openHint: string;
     active: string;
+    windows: { presentation: string; about: string; interests: string };
+    widgetLabel: string;
   };
   projects: {
     eyebrow: string;
