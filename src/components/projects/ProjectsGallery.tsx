@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
+import { DecodeText } from "@/components/DecodeText";
 import { ProjectDetails, projectLayout, projectTitleId } from "@/components/projects/ProjectDetails";
 import { projects } from "@/data/projects";
 import { useKeyboardMode } from "@/hooks/useKeyboardMode";
@@ -33,7 +34,7 @@ function Heading() {
     <header className="projects__head">
       <p className="screen__eyebrow">{t.projects.eyebrow}</p>
       <h2 id="projects-title" className="screen__title">
-        {t.projects.title}
+        <DecodeText text={t.projects.title} />
       </h2>
     </header>
   );
@@ -82,6 +83,12 @@ function ProjectStage({ missing }: { missing: ReadonlySet<string> }) {
     keyboardApi.setRaised(inProjects && project ? project.techIds : []);
   }, [active, inProjects]);
   useEffect(() => () => keyboardApi.lowerAll(), []);
+
+  // The EXPLORE background glows in the current project's accent (see .space-bg__glow).
+  useEffect(() => {
+    const accent = projects[active]?.accent;
+    if (inProjects && accent) document.documentElement.style.setProperty("--project-accent", accent);
+  }, [active, inProjects]);
 
   // Left / Right keys, only while this module is active. Wheel and touch scrolling are untouched.
   useEffect(() => {
