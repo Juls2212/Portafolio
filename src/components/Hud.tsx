@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { modules } from "@/data/modules";
 import { profile } from "@/data/profile";
@@ -10,6 +11,8 @@ import { useIntroDone } from "@/lib/intro-store";
 import { backToHome, useSiteMode } from "@/lib/site-mode";
 
 const TYPE_INTERVAL_MS = 26;
+/** Boot stagger index for the HUD entrance (see .hud-boot in globals.css). */
+const boot = (i: number) => ({ "--b": i }) as CSSProperties;
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** Characters revealed so far. Persisting it across language switches means no replay. */
@@ -56,7 +59,7 @@ export function Hud() {
   return (
     <>
       <header className="hud hud--top">
-        <div className="hud__terminal" role="status" aria-label={t.a11y.hudStatus}>
+        <div className="hud__terminal hud-boot" style={boot(0)} role="status" aria-label={t.a11y.hudStatus}>
           <span className="sr-only">{lines.join(". ")}</span>
           <div aria-hidden="true">
             {typed.map((line, i) => (
@@ -69,17 +72,19 @@ export function Hud() {
         </div>
         <div className="hud__right">
           {siteMode === "explore" && (
-            <button type="button" className="hud__back" onClick={backToHome}>
+            <button type="button" className="hud__back hud-boot" style={boot(3)} data-magnet onClick={backToHome}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M15 5l-7 7 7 7" />
               </svg>
               {t.hud.back}
             </button>
           )}
-          <p className="hud__counter">
+          <p className="hud__counter hud-boot" style={boot(1)}>
             {pad(active.number)} / {pad(modules.length)} · {active.label[lang]}
           </p>
-          <LanguageToggle />
+          <div className="hud-boot" style={boot(2)}>
+            <LanguageToggle />
+          </div>
         </div>
       </header>
     </>
