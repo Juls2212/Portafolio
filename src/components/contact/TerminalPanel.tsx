@@ -54,7 +54,7 @@ export function TerminalPanel() {
   const cursorAt = reduced || pending === -1 ? lines.length - 1 : pending;
 
   return (
-    <div ref={ref} className="term" aria-hidden="true">
+    <div ref={ref} className="term" aria-hidden="true" data-reveal>
       <div className="term__bar">
         <span className="term__dot" />
         <span className="term__dot" />
