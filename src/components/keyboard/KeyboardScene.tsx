@@ -18,10 +18,11 @@ import {
 import type { Group, InstancedMesh, Mesh, MeshBasicMaterial, PerspectiveCamera } from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { keyboardKeys } from "@/data/technologies";
-import { hasKeyboard, keyboardPoses } from "@/data/poses";
 import type { PosedModule } from "@/data/poses";
+import { keyboardPoses } from "@/data/poses";
 import type { KeyboardPose } from "@/data/poses";
-import { getActiveModule, getBoardExiting, getBoardShown, subscribeActiveModule } from "@/lib/active-module";
+import { getBoardExiting, getBoardShown, subscribeActiveModule } from "@/lib/active-module";
+import { subscribeScroll } from "@/lib/ambient";
 import {
   getKeyboardState,
   keyAtCell,
@@ -41,9 +42,21 @@ import {
 } from "./board";
 import { createKeycapMaterial } from "./keycap-material";
 import { createLogoAtlas } from "./logo-atlas";
+import GlobeScene from "@/components/globe/GlobeScene";
 
 const COUNT = keyboardKeys.length;
-const SPRING_OMEGA = 7;
+/** Stiffness of the critically damped follower that smooths the scroll-driven pose (1/s). */
+const FOLLOW_OMEGA = 13;
+const DPR_MOVING = 1.25;
+const DPR_SETTLE_MS = 280;
+/** Below this glide progress the board counts as sitting in the Stack pose (hover and clicks are live). */
+const INTERACTIVE_BELOW = 0.03;
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const smoothstep = (a: number, b: number, x: number) => {
+  const t = clamp01((x - a) / (b - a));
+  return t * t * (3 - 2 * t);
+};
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const INTERACTIVE_SELECTOR = "a, button, input, textarea, select, dialog, [data-keyboard-ignore]";
 
 type Vec7 = Float32Array; // x, y, z, rx, ry, rz, scale
@@ -102,6 +115,7 @@ function Rig() {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
   const size = useThree((s) => s.size);
   const invalidate = useThree((s) => s.invalidate);
+  const setDpr = useThree((s) => s.setDpr);
 
   const group = useRef<Group>(null);
   const caps = useRef<InstancedMesh>(null);
@@ -192,14 +206,24 @@ function Rig() {
     [resources],
   );
 
+  /**
+   * Continuous pose. `p` is the glide progress between the Stack pose (0) and the Projects pose (1),
+   * read each frame from where the Projects section sits relative to the viewport, then followed by a
+   * frame-rate-independent critically damped spring (`v` is its velocity). `A` / `B` are the two
+   * fitted poses [x, y, z, rx, ry, rz, scale], recomputed on resize.
+   */
   const pose = useRef({
-    cur: new Float32Array([0, 0, 0, 0, 0, 0, 0]) as Vec7,
-    vel: new Float32Array(7),
-    target: new Float32Array(7) as Vec7,
-    start: new Float32Array(7) as Vec7,
-    total: 0,
-    moduleId: "stack" as PosedModule,
-    initialised: false,
+    p: 0,
+    v: 0,
+    A: new Float32Array(7) as Vec7,
+    B: new Float32Array(7) as Vec7,
+    cur: new Float32Array(7) as Vec7,
+    ready: false,
+    projectsEl: null as HTMLElement | null,
+    layerEl: null as HTMLElement | null,
+    fade: 1,
+    dprLow: false,
+    settledSince: 0,
   });
   const frame = useRef({
     last: null as number | null,
@@ -261,52 +285,46 @@ function Rig() {
     ]);
   };
 
-  const distance = (a: Float32Array, b: Float32Array) => {
-    const { h, w } = half();
-    return (
-      Math.abs(a[0]! - b[0]!) / w +
-      Math.abs(a[1]! - b[1]!) / h +
-      Math.abs(a[3]! - b[3]!) +
-      Math.abs(a[4]! - b[4]!) +
-      Math.abs(a[6]! - b[6]!) / Math.max(0.01, Math.max(a[6]!, b[6]!, 0.5))
-    );
+  /** Where the Projects section sits: 0 while it is still a full screen below, 1 once it fills the viewport. */
+  const readProgress = () => {
+    const el = (pose.current.projectsEl ??= document.getElementById("projects"));
+    if (!el) return 0;
+    return clamp01(1 - el.getBoundingClientRect().top / window.innerHeight);
   };
 
-  /** Point the pose spring at a moduleId; decide whether to snap or animate. */
-  const retarget = (moduleId: PosedModule, forceSnap = false) => {
-    const p = pose.current;
-    p.moduleId = moduleId;
-    p.target = targetFor(moduleId);
-    const appearing = p.cur[6]! < 0.02 && p.target[6]! > 0;
-    if (!p.initialised || forceSnap || (appearing && !animator.entered)) {
-      p.cur.set(p.target);
-      p.vel.fill(0);
-      p.initialised = true;
-    } else if (appearing) {
-      // Re-appearing after being hidden: land in place, then grow (edge-on turn plays on the way).
-      p.cur.set(p.target);
-      p.cur[6] = 0;
-      p.vel.fill(0);
-    }
-    p.start.set(p.cur);
-    p.total = distance(p.cur, p.target);
+  /** The board at glide progress q: x leads (it clears the left column first), scale follows. */
+  const poseAt = (q: number, out: Float32Array) => {
+    const { A, B } = pose.current;
+    const qx = smoothstep(0, 0.5, q);
+    const qs = smoothstep(0.1, 0.6, q);
+    const qr = smoothstep(0, 1, q);
+    out[0] = lerp(A[0]!, B[0]!, qx);
+    out[1] = lerp(A[1]!, B[1]!, qx);
+    out[2] = lerp(A[2]!, B[2]!, qx);
+    out[3] = lerp(A[3]!, B[3]!, qr);
+    out[4] = lerp(A[4]!, B[4]!, qr);
+    out[5] = lerp(A[5]!, B[5]!, qr);
+    out[6] = lerp(A[6]!, B[6]!, qs);
   };
 
-  // Stack <-> Projects glide. Each time the board goes from hidden to shown it snaps to its pose and
-  // replays the entrance; leaving Projects downward plays the exit instead. Other modules have no pose.
+  const refit = () => {
+    const ps = pose.current;
+    ps.A = targetFor("stack");
+    ps.B = targetFor("projects");
+    ps.ready = true;
+    buttonsDirty.current = true;
+  };
+
+  // Entrance / exit and visibility. Each time the board goes from hidden to shown it snaps to the pose
+  // for the current scroll position and replays the entrance; leaving Projects downward plays the exit.
   useEffect(() => {
-    let last: PosedModule | null = null;
     let wasShown = false;
     const apply = () => {
-      const moduleId = getActiveModule();
       const shown = getBoardShown();
-      if (hasKeyboard(moduleId) && moduleId !== last) {
-        last = moduleId;
-        retarget(moduleId, false);
-        buttonsDirty.current = true;
-      }
-      if (shown && !wasShown && hasKeyboard(moduleId)) {
-        retarget(moduleId, true);
+      if (!pose.current.ready) refit();
+      if (shown && !wasShown) {
+        pose.current.p = readProgress();
+        pose.current.v = 0;
         animator.restartEntrance(performance.now() / 1000);
         buttonsDirty.current = true;
       }
@@ -315,15 +333,19 @@ function Rig() {
       invalidate();
     };
     apply();
-    return subscribeActiveModule(apply);
+    const offModule = subscribeActiveModule(apply);
+    // Scrolling drives the pose: wake the (demand) loop; the shared listener is already rAF-throttled.
+    const offScroll = subscribeScroll(invalidate);
+    return () => {
+      offModule();
+      offScroll();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Viewport changes re-fit the board and keep the current module's pose.
+  // Viewport changes re-fit both poses.
   useEffect(() => {
-    if (!pose.current.initialised) return;
-    retarget(pose.current.moduleId, true);
-    buttonsDirty.current = true;
+    refit();
     invalidate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [size.width, size.height]);
@@ -359,7 +381,7 @@ function Rig() {
     const cellAt = (clientX: number, clientY: number): string | null => {
       const g = group.current;
       const p = pose.current;
-      if (!g || !g.visible || !getBoardShown() || animator.exiting || !keyboardPoses[p.moduleId].interactive) return null;
+      if (!g || !g.visible || !getBoardShown() || animator.exiting || p.p > INTERACTIVE_BELOW) return null;
       g.updateMatrixWorld(true);
       const ndcX = (clientX / window.innerWidth) * 2 - 1;
       const ndcY = -(clientY / window.innerHeight) * 2 + 1;
@@ -415,40 +437,103 @@ function Rig() {
     const mesh = caps.current;
     if (!g || !mesh) return;
     const f = frame.current;
+    // Shared canvas: while the board is off screen (HOME globe frames) skip all keyboard work.
+    if (!g.visible && !getBoardShown() && !getBoardExiting() && !animator.exiting) {
+      f.last = null;
+      if (pose.current.fade !== 1) {
+        pose.current.fade = 1;
+        pose.current.layerEl?.style.removeProperty("--kb-fade");
+      }
+      return;
+    }
     const p = pose.current;
     const nowMs = performance.now();
     const now = nowMs / 1000;
-    const dt = Math.min(0.033, f.last === null ? 1 / 60 : now - f.last);
+    const rawDt = f.last === null ? 1 / 60 : now - f.last;
+    const dt = Math.min(0.033, rawDt);
     f.last = now;
     let active = false;
 
-    // Pose spring (critically damped).
+    // Pose: follow the scroll-driven progress with an exact critically damped step (any frame rate).
+    const target = readProgress();
+    const d = p.p - target;
     let settled = true;
-    for (let i = 0; i < 7; i++) {
-      const diff = p.target[i]! - p.cur[i]!;
-      const acc = SPRING_OMEGA * SPRING_OMEGA * diff - 2 * SPRING_OMEGA * p.vel[i]!;
-      p.vel[i] = p.vel[i]! + acc * dt;
-      p.cur[i] = p.cur[i]! + p.vel[i]! * dt;
-      if (Math.abs(diff) > 0.0008 || Math.abs(p.vel[i]!) > 0.004) settled = false;
+    if (Math.abs(d) < 0.0006 && Math.abs(p.v) < 0.003) {
+      p.p = target;
+      p.v = 0;
+    } else {
+      settled = false;
+      active = true;
+      // Real elapsed time (the closed-form step is stable at any size), so a slow frame still catches up.
+      const stepDt = Math.min(0.25, rawDt);
+      const t1 = p.v + FOLLOW_OMEGA * d;
+      const e = Math.exp(-FOLLOW_OMEGA * stepDt);
+      p.p = target + (d + t1 * stepDt) * e;
+      p.v = (p.v - FOLLOW_OMEGA * t1 * stepDt) * e;
     }
-    if (settled) {
-      p.cur.set(p.target);
-      p.vel.fill(0);
-      p.total = 0;
-    } else active = true;
+    poseAt(p.p, p.cur);
 
-    // Edge-on turn in the middle of a move.
-    let edge = 0;
-    if (p.total > 0.02) {
-      const progress = Math.min(1, Math.max(0, 1 - distance(p.cur, p.target) / p.total));
-      edge = Math.sin(Math.PI * progress) ** 2;
+    // Edge-on turn, driven by the same progress; the board also dims while it crosses the content.
+    const edge = Math.sin(Math.PI * p.p) ** 2;
+    const fade = 1 - 0.5 * Math.sin(Math.PI * p.p) ** 0.8;
+    if (Math.abs(fade - p.fade) > 0.015) {
+      p.fade = fade;
+      (p.layerEl ??= document.querySelector<HTMLElement>(".keyboard-layer"))?.style.setProperty("--kb-fade", fade.toFixed(2));
+    }
+
+    // Lower resolution while moving, restored once the pose has been still for a moment.
+    if (window.devicePixelRatio > DPR_MOVING) {
+      if (!settled && !p.dprLow) {
+        p.dprLow = true;
+        setDpr(DPR_MOVING);
+      } else if (!settled) {
+        p.settledSince = 0;
+      } else if (p.dprLow) {
+        if (p.settledSince === 0) p.settledSince = nowMs;
+        if (nowMs - p.settledSince > DPR_SETTLE_MS) {
+          p.dprLow = false;
+          p.settledSince = 0;
+          setDpr(Math.min(window.devicePixelRatio, 1.5));
+        } else active = true;
+      }
     }
 
     const scale = p.cur[6]!;
     g.position.set(p.cur[0]!, p.cur[1]!, p.cur[2]!);
     g.rotation.set(p.cur[3]! * (1 - 0.96 * edge), p.cur[4]! + edge * 0.9, p.cur[5]!);
     g.scale.setScalar(Math.max(scale, 0.0001));
-    g.visible = animator.entered && scale > 0.002;
+    // The canvas is shared with the HOME globe, so the board must hide itself when its modules are off screen.
+    // After its exit finishes the base plate has fully sunk (baseAppear 0), so the board stays hidden.
+    g.visible =
+      animator.entered &&
+      scale > 0.002 &&
+      (getBoardShown() || ((getBoardExiting() || animator.exiting) && animator.baseAppear > 0.002));
+
+    // Test hook (only when window.__kbDebug is set): the board's on-screen box and glide state.
+    const dbg = window as unknown as { __kbDebug?: boolean; __kbBox?: unknown };
+    if (dbg.__kbDebug) {
+      g.updateMatrixWorld(true);
+      let x0 = Infinity;
+      let y0 = Infinity;
+      let x1 = -Infinity;
+      let y1 = -Infinity;
+      const pts: number[][] = [];
+      for (const sx of [-1, 1]) {
+        for (const sz of [-1, 1]) {
+          for (const y of [-BASE_HEIGHT, KEY_TOP_Y]) {
+            tmp.a.set((sx * BASE_WIDTH) / 2, y, (sz * BASE_DEPTH) / 2).applyMatrix4(g.matrixWorld).project(camera);
+            const px = ((tmp.a.x + 1) / 2) * window.innerWidth;
+            const py = ((1 - tmp.a.y) / 2) * window.innerHeight;
+            pts.push([px, py]);
+            x0 = Math.min(x0, px);
+            x1 = Math.max(x1, px);
+            y0 = Math.min(y0, py);
+            y1 = Math.max(y1, py);
+          }
+        }
+      }
+      dbg.__kbBox = { x0, y0, x1, y1, pts, p: p.p, visible: g.visible, fade: p.fade, t: performance.now() };
+    }
 
     // The invisible DOM buttons follow the board's current on-screen transform.
     if (buttonsDirty.current || !settled || wasUnsettled.current) {
@@ -559,8 +644,11 @@ function Rig() {
   );
 }
 
-/** The single, fixed canvas. Loaded lazily; it persists while the board moves between modules. */
-export default function KeyboardScene() {
+/**
+ * The single, fixed canvas. Loaded lazily; it persists across modules. It hosts the HOME globe and,
+ * in 3D mode, the keyboard rig. frameloop stays "demand": each scene calls invalidate() itself.
+ */
+export default function KeyboardScene({ keyboard }: { keyboard: boolean }) {
   return (
     <Canvas
       frameloop="demand"
@@ -570,7 +658,8 @@ export default function KeyboardScene() {
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       style={{ position: "fixed", inset: 0, pointerEvents: "none" }}
     >
-      <Rig />
+      <GlobeScene />
+      {keyboard && <Rig />}
     </Canvas>
   );
 }
