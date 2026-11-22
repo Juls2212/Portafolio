@@ -9,7 +9,12 @@ export type KeyboardMode = "3d" | "dom";
 const QUERIES = ["(min-width: 768px)", "(prefers-reduced-motion: no-preference)"] as const;
 
 let webgl: boolean | null = null;
-function hasWebGL(): boolean {
+export function hasWebGL(): boolean {
+  if (webgl === null) {
+    // The gate script already probed WebGL before first paint.
+    const flag = document.documentElement.dataset.webgl;
+    if (flag) webgl = flag === "1";
+  }
   if (webgl === null) {
     try {
       const canvas = document.createElement("canvas");
@@ -33,4 +38,11 @@ function getSnapshot(): KeyboardMode {
 
 export function useKeyboardMode(): KeyboardMode {
   return useSyncExternalStore(subscribe, getSnapshot, () => "dom" as KeyboardMode);
+}
+
+const noop = () => () => {};
+
+/** True when WebGL is available (false on the server and for the first client render). */
+export function useWebGL(): boolean {
+  return useSyncExternalStore(noop, hasWebGL, () => false);
 }
