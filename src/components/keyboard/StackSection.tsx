@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { DecodeText } from "@/components/DecodeText";
 import { KeyGrid } from "@/components/keyboard/KeyGrid";
 import { KeyPanel } from "@/components/keyboard/KeyPanel";
 import { KeyboardOrb } from "@/components/keyboard/KeyboardOrb";
@@ -30,10 +31,10 @@ export function StackSection() {
 
   return (
     <section id="stack" className="stack" data-mode={mode} aria-labelledby="stack-title">
-      <div className="stack__head" data-keyboard-ignore>
+      <div className="stack__head" data-keyboard-ignore data-reveal>
         <p className="screen__eyebrow">{t.stack.eyebrow}</p>
         <h2 id="stack-title" className="screen__title" tabIndex={-1}>
-          {t.stack.title}
+          <DecodeText text={t.stack.title} />
         </h2>
         <p className="screen__text">{t.stack.intro}</p>
         <p className="stack__hint">{t.stack.hint}</p>
