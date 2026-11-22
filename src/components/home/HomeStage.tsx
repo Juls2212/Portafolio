@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
 import { PanelFull, useTeaser } from "@/components/home/PanelContent";
+import { PanelWidgets } from "@/components/home/PanelWidgets";
 import type { AssetAvailability } from "@/data/assets";
 import { DEFAULT_PANEL, HOME_PANELS } from "@/data/home-panels";
 import type { HomePanelId } from "@/data/home-panels";
@@ -148,16 +149,29 @@ function CarouselPanel({ id, code, accent, order, slot, assets, onOpen }: Carous
     <div
       className="cpanel"
       data-slot={slot}
+      data-accent={accent}
+      data-panel={id}
       role="group"
       aria-roledescription={t.home.slide}
       aria-label={teaser.name}
       style={{ "--i": order } as CSSProperties}
     >
       <div className="screen cpanel__glass" data-accent={accent}>
+        {/* The plate: a chamfered polygon (clip-path) with a segmented border, drawn behind the content. */}
+        <span className="shell" aria-hidden="true" />
         <span className="corner corner--tl" aria-hidden="true" />
         <span className="corner corner--tr" aria-hidden="true" />
         <span className="corner corner--bl" aria-hidden="true" />
         <span className="corner corner--br" aria-hidden="true" />
+        {/* Window chrome: decorative title bar (dots + file-like title). */}
+        <div className="wchrome" aria-hidden="true">
+          <span className="wchrome__dots">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="wchrome__title">{t.home.windows[id]}</span>
+        </div>
         <div className="cpanel__full" inert={!isActive}>
           <PanelFull id={id} assets={assets} />
         </div>
@@ -176,6 +190,7 @@ function CarouselPanel({ id, code, accent, order, slot, assets, onOpen }: Carous
           </span>
         </button>
       </div>
+      <PanelWidgets />
     </div>
   );
 }
