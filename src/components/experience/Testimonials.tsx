@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { DecodeText } from "@/components/DecodeText";
 import { testimonials } from "@/data/experience";
 import { useLang, useT } from "@/i18n/language-context";
 
@@ -18,37 +18,21 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-/** Three testimonial cards. They reveal once, with a small stagger, when the block enters the viewport. */
+/** Three testimonial cards (depth reveal and tilt come from data-reveal / the shared ambient listener). */
 export function Testimonials() {
   const t = useT();
   const { lang } = useLang();
-  const ref = useRef<HTMLUListElement>(null);
-  const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setRevealed(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.15 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <>
-      <h3 className="experience__sub">{t.experience.testimonialsTitle}</h3>
-      <ul ref={ref} className="t-grid" data-revealed={revealed}>
+      <h3 className="experience__sub">
+        <DecodeText text={t.experience.testimonialsTitle} />
+      </h3>
+      <ul className="t-grid">
         {testimonials.map((item, i) => (
           <li
             key={item.id}
             className="t-card"
+            data-reveal
             data-accent={ACCENTS[i % ACCENTS.length]}
             style={{ "--i": i } as CSSProperties}
           >
