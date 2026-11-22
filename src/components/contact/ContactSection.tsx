@@ -1,5 +1,6 @@
 "use client";
 
+import { DecodeText } from "@/components/DecodeText";
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CodeRain } from "@/components/contact/CodeRain";
@@ -96,10 +97,10 @@ export function ContactSection() {
       <div className="contact__main">
         <div className="contact__grid">
           <TerminalPanel />
-          <div className="contact__col">
+          <div className="contact__col" data-reveal>
             <p className="screen__eyebrow">{t.contact.eyebrow}</p>
             <h2 id="contact-title" className="screen__title">
-              {t.contact.title}
+              <DecodeText text={t.contact.title} />
             </h2>
             <p className="screen__text">{t.contact.intro}</p>
 
@@ -133,10 +134,12 @@ export function ContactSection() {
           </div>
         </div>
 
-        <h3 className="experience__sub">{t.contact.socialTitle}</h3>
+        <h3 className="experience__sub">
+          <DecodeText text={t.contact.socialTitle} />
+        </h3>
         <ul className="social">
           {!emailPending && (
-            <li className="social__item--mail">
+            <li className="social__item--mail" data-reveal>
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
                 className="social__btn"
@@ -162,7 +165,7 @@ export function ContactSection() {
             </li>
           )}
           {socialLinks.map((link) => (
-            <li key={link.id}>
+            <li key={link.id} data-reveal>
               <a
                 href={link.url}
                 target="_blank"
