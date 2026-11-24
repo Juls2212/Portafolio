@@ -1,17 +1,21 @@
-// Copies the source images from the root images/ folder (and optional CV PDFs) into public/ and
-// writes src/data/generated/image-meta.ts with each image's REAL size.
+// Copies the source images from the root images/ folder (and the CV PDFs) into public/ and writes
+// src/data/generated/image-meta.ts with each image's REAL size.
 //
 //   node scripts/sync-assets.mjs        (runs automatically on predev and prebuild)
 //
+// Safety rules:
 // - Images are copied under a content-hashed name (personal.1a2b3c4d.jpeg), so replacing a source
 //   file always produces a new URL: no stale copy in public/, in the browser or in .next/cache/images.
-// - Older copies of the same image (unhashed or with another hash) are deleted.
-// - The width/height used by the site come from the file itself, never from hardcoded numbers.
-// - CVs: put cv-es.pdf / cv-en.pdf in the root cv/ or images/ folder; they are copied to public/cv
-//   (stable names, because the site links to them) whenever the content differs.
+// - The new copy is written FIRST, the metadata is written atomically (temp file + rename) SECOND, and
+//   older copies are deleted LAST. Metadata therefore never points to a file that is not in public/,
+//   even for a dev server or page that is still running during the sync.
+// - Every image the site references must exist: a missing source or a missing copy fails the sync
+//   (exit code 1) with a clear message, instead of leaving a silent broken image.
+// - CVs: cv-es.pdf / cv-en.pdf are taken from images/ (preferred) or cv/ and copied to public/cv
+//   (stable names, because the site links to them). A missing CV only disables its button.
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -29,53 +33,80 @@ const CVS = ["cv-es.pdf", "cv-en.pdf"];
 
 const sha = (buf) => createHash("sha1").update(buf).digest("hex");
 const meta = {};
+const errors = [];
+const stale = []; // older copies, deleted only after the metadata is safely written
 
+// 1. Write the new copies.
 for (const { file, dir } of IMAGES) {
   const source = path.join(root, "images", file);
   if (!existsSync(source)) {
-    console.warn(`[sync-assets] missing source: images/${file} (the site shows a labeled placeholder)`);
+    errors.push(`missing source image: images/${file}`);
     continue;
   }
-  const buf = await readFile(source);
-  const { name, ext } = path.parse(file);
-  const hashed = `${name}.${sha(buf).slice(0, 8)}${ext}`;
-  const outDir = path.join(root, "public", dir);
-  await mkdir(outDir, { recursive: true });
-
-  // Remove every older copy of this image (unhashed or hashed differently).
-  for (const existing of await readdir(outDir)) {
-    const parsed = path.parse(existing);
-    const base = parsed.name.split(".")[0];
-    if (base === name && parsed.ext === ext && existing !== hashed) await rm(path.join(outDir, existing));
+  try {
+    const buf = await readFile(source);
+    const info = await sharp(buf).metadata();
+    if (!info.width || !info.height) throw new Error("unreadable image (no size)");
+    const { name, ext } = path.parse(file);
+    const hashed = `${name}.${sha(buf).slice(0, 8)}${ext}`;
+    const outDir = path.join(root, "public", dir);
+    await mkdir(outDir, { recursive: true });
+    const dest = path.join(outDir, hashed);
+    if (!existsSync(dest)) await writeFile(dest, buf);
+    for (const existing of await readdir(outDir)) {
+      const parsed = path.parse(existing);
+      if (parsed.name.split(".")[0] === name && parsed.ext === ext && existing !== hashed) stale.push(path.join(outDir, existing));
+    }
+    const swap = (info.orientation ?? 1) >= 5; // EXIF-rotated files display swapped
+    meta[file] = {
+      src: `/${dir}/${hashed}`,
+      width: swap ? info.height : info.width,
+      height: swap ? info.width : info.height,
+    };
+    console.log(`[sync-assets] ${file} -> /${dir}/${hashed} (${meta[file].width}x${meta[file].height})`);
+  } catch (e) {
+    errors.push(`could not process images/${file}: ${e.message}`);
   }
-  const dest = path.join(outDir, hashed);
-  if (!existsSync(dest)) await writeFile(dest, buf);
-
-  const info = await sharp(buf).metadata();
-  const swap = (info.orientation ?? 1) >= 5; // EXIF-rotated files display swapped
-  meta[file] = {
-    src: `/${dir}/${hashed}`,
-    width: swap ? info.height : info.width,
-    height: swap ? info.width : info.height,
-  };
-  console.log(`[sync-assets] ${file} -> /${dir}/${hashed} (${meta[file].width}x${meta[file].height})`);
 }
 
-for (const file of CVS) {
-  const source = [path.join(root, "cv", file), path.join(root, "images", file)].find((p) => existsSync(p));
-  if (!source) continue;
-  const dest = path.join(root, "public", "cv", file);
-  await mkdir(path.dirname(dest), { recursive: true });
-  const changed = !existsSync(dest) || sha(await readFile(dest)) !== sha(await readFile(source));
-  if (changed) await copyFile(source, dest);
-  console.log(`[sync-assets] ${file} ${changed ? "updated" : "up to date"}`);
+// 2. Every file the metadata points to must exist right now.
+for (const [file, m] of Object.entries(meta)) {
+  if (!existsSync(path.join(root, "public", m.src))) {
+    errors.push(`metadata for ${file} points to ${m.src}, which is not in public/`);
+    delete meta[file];
+  }
 }
 
+// 3. Metadata, written atomically.
 const outFile = path.join(root, "src", "data", "generated", "image-meta.ts");
 await mkdir(path.dirname(outFile), { recursive: true });
+const tmp = `${outFile}.tmp`;
 await writeFile(
-  outFile,
+  tmp,
   `// GENERATED by scripts/sync-assets.mjs: do not edit by hand.\n` +
     `export interface ImageMeta {\n  src: string;\n  width: number;\n  height: number;\n}\n\n` +
     `export const imageMeta: Record<string, ImageMeta> = ${JSON.stringify(meta, null, 2)};\n`,
 );
+await rename(tmp, outFile);
+
+// 4. Only now remove older copies.
+for (const file of stale) await rm(file, { force: true });
+
+// 5. CVs.
+for (const file of CVS) {
+  const source = [path.join(root, "images", file), path.join(root, "cv", file)].find((p) => existsSync(p));
+  if (!source) {
+    console.warn(`[sync-assets] ${file} not found in images/ or cv/ (its download button stays disabled)`);
+    continue;
+  }
+  const dest = path.join(root, "public", "cv", file);
+  await mkdir(path.dirname(dest), { recursive: true });
+  const changed = !existsSync(dest) || sha(await readFile(dest)) !== sha(await readFile(source));
+  if (changed) await copyFile(source, dest);
+  console.log(`[sync-assets] ${file} ${changed ? "updated" : "up to date"} (from ${path.relative(root, path.dirname(source))}/)`);
+}
+
+if (errors.length) {
+  console.error(`\n[sync-assets] FAILED:\n  - ${errors.join("\n  - ")}`);
+  process.exit(1);
+}
