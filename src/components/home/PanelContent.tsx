@@ -57,7 +57,7 @@ function PresentationFull({ cvAvailable }: { cvAvailable: AssetAvailability["cv"
         </a>
         {/* The CV follows the active language; without the file the button stays disabled and tagged. */}
         {cvAvailable[lang] ? (
-          <a href={cvPath(lang)} download className="btn btn--ghost">
+          <a href={cvPath(lang)} download={`Juliana-Penafiel-CV-${lang.toUpperCase()}.pdf`} className="btn btn--ghost">
             {t.presentation.downloadCv}
           </a>
         ) : (
