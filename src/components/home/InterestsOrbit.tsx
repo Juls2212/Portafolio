@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { useHydrated } from "@/components/home/AboutFacets";
 import { useT } from "@/i18n/language-context";
+import { useReducedMotion } from "@/lib/motion-pref";
 
 /** Local inline line icons, one per interest (same order as the dictionary items). */
 const ICONS: readonly ReactNode[] = [
@@ -49,10 +50,11 @@ function Icon({ index }: { index: number }) {
  * playbackRate together keeps them in sync, so nodes stay upright and nothing jumps.
  */
 function useOrbitEasing(ref: React.RefObject<HTMLElement | null>) {
+  const reducedNow = useReducedMotion();
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof CSSAnimation === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reducedNow) return;
     let hover = false;
     let focus = false;
     let target = 1;
@@ -111,7 +113,7 @@ function useOrbitEasing(ref: React.RefObject<HTMLElement | null>) {
       el.removeEventListener("focusout", onFocusOut);
       cancelAnimationFrame(raf);
     };
-  }, [ref]);
+  }, [ref, reducedNow]);
 }
 
 /**
