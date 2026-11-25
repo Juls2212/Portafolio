@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/i18n/language-context";
+import { useReducedMotion } from "@/lib/motion-pref";
 
 const TYPE_MS = 55;
 const HOLD_MS = 2200;
@@ -16,7 +17,7 @@ export function TerminalPanel() {
   const total = lines.reduce((sum, l) => sum + l.length, 0);
   const [chars, setChars] = useState(0);
   const [visible, setVisible] = useState(false);
-  const [reduced, setReduced] = useState(false);
+  const reduced = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,14 +26,6 @@ export function TerminalPanel() {
     const observer = new IntersectionObserver((entries) => setVisible(entries.some((e) => e.isIntersecting)));
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
   }, []);
 
   // Type, hold, restart. Only while on screen and with motion allowed.
