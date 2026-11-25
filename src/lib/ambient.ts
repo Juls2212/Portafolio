@@ -1,4 +1,6 @@
 import { DURATION, EASE, cssEase } from "@/lib/motion";
+import { reportError } from "@/lib/diagnostics";
+import { isReducedMotion } from "@/lib/motion-pref";
 import { getActiveModule, subscribeActiveModule } from "@/lib/active-module";
 import type { ModuleId } from "@/data/modules";
 
@@ -52,7 +54,7 @@ export function subscribePointer(fn: (p: PointerState) => void) {
 }
 
 const root = () => document.documentElement;
-const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduced = isReducedMotion;
 const finePointer = () => window.matchMedia("(pointer: fine)").matches;
 
 let started = false;
@@ -61,7 +63,6 @@ export function startAmbient(): () => void {
   if (started) return () => {};
   started = true;
   const el = root();
-  el.dataset.motion = reduced() ? "reduced" : "on";
 
   let frame = 0;
   let pointerDirty = false;
@@ -79,6 +80,13 @@ export function startAmbient(): () => void {
 
   const flush = () => {
     frame = 0;
+    try {
+      flushNow();
+    } catch (e) {
+      reportError("ambient", e);
+    }
+  };
+  const flushNow = () => {
     if (pointerDirty) {
       pointerDirty = false;
       if (finePointer() && !reduced()) {
