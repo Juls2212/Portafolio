@@ -1,4 +1,5 @@
 import { AtmosphereBack, AtmosphereFront } from "@/components/atmosphere/Atmosphere";
+import { Diagnostics } from "@/components/Diagnostics";
 import { Hud } from "@/components/Hud";
 import { HudFrame } from "@/components/HudFrame";
 import { HoloRoom } from "@/components/HoloRoom";
@@ -17,6 +18,7 @@ export default function Home() {
       <SkipLink />
       <Hud />
       <HudFrame />
+      <Diagnostics />
       <AtmosphereBack />
       {/* The one fixed, lazily loaded WebGL canvas (HOME globe, 3D keyboard). Persists across modules. */}
       <KeyboardLayer />
