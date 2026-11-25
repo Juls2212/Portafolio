@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect } from "react";
+import { CanvasBoundary } from "@/components/keyboard/CanvasBoundary";
 import { useKeyboardMode, useWebGL } from "@/hooks/useKeyboardMode";
 import { useLayerOn } from "@/lib/active-module";
 import { useIntroDone } from "@/lib/intro-store";
@@ -40,7 +41,9 @@ export function KeyboardLayer() {
   if (!ready) return null;
   return (
     <div className="keyboard-layer" data-visible={(keyboard && on) || globeVisible} aria-hidden="true">
-      <KeyboardScene keyboard={keyboard} />
+      <CanvasBoundary>
+        <KeyboardScene keyboard={keyboard} />
+      </CanvasBoundary>
     </div>
   );
 }
