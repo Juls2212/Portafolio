@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { MotionToggle } from "@/components/MotionToggle";
 import { modules } from "@/data/modules";
 import { profile } from "@/data/profile";
 import { useLang, useT } from "@/i18n/language-context";
 import { useActiveModule } from "@/lib/active-module";
+import { isReducedMotion } from "@/lib/motion-pref";
 import { useIntroDone } from "@/lib/intro-store";
 import { backToHome, useSiteMode } from "@/lib/site-mode";
 
@@ -20,7 +22,7 @@ function useTypedChars(active: boolean): number {
   const [chars, setChars] = useState(0);
   useEffect(() => {
     if (!active) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = isReducedMotion();
     const id = window.setInterval(
       () => setChars((c) => (reduced ? Number.MAX_SAFE_INTEGER : c + 1)),
       reduced ? 0 : TYPE_INTERVAL_MS,
@@ -82,7 +84,8 @@ export function Hud() {
           <p className="hud__counter hud-boot" style={boot(1)}>
             {pad(active.number)} / {pad(modules.length)} · {active.label[lang]}
           </p>
-          <div className="hud-boot" style={boot(2)}>
+          <div className="hud-boot hud__controls" style={boot(2)}>
+            <MotionToggle />
             <LanguageToggle />
           </div>
         </div>
