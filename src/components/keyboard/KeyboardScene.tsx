@@ -29,6 +29,7 @@ import {
   keyboardActions,
   subscribeKeyboard,
 } from "@/lib/keyboard-store";
+import { clearGpuFailure, reportGpuFailure, useCapabilities } from "@/lib/capabilities";
 import { readToken } from "@/lib/tokens";
 import { KeyAnimator, REST_Y, SELECT_RISE, keyPosition } from "./animator";
 import {
@@ -649,13 +650,23 @@ function Rig() {
  * in 3D mode, the keyboard rig. frameloop stays "demand": each scene calls invalidate() itself.
  */
 export default function KeyboardScene({ keyboard }: { keyboard: boolean }) {
+  const light = useCapabilities().quality === "light";
   return (
     <Canvas
       frameloop="demand"
-      dpr={[1, 1.5]}
+      dpr={light ? [1, 1] : [1, 1.5]}
       flat
       camera={{ position: [0, 0, 16], fov: 26, near: 1, far: 60 }}
-      gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+      gl={{ alpha: true, antialias: !light, powerPreference: "high-performance" }}
+      onCreated={({ gl }) => {
+        // Lost context: drop the canvas (static fallback shows); restored: bring it back.
+        const el = gl.domElement;
+        el.addEventListener("webglcontextlost", (event) => {
+          event.preventDefault();
+          reportGpuFailure("WebGL context lost");
+        });
+        el.addEventListener("webglcontextrestored", () => clearGpuFailure());
+      }}
       style={{ position: "fixed", inset: 0, pointerEvents: "none" }}
     >
       <GlobeScene />
