@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useReducedMotion } from "@/lib/motion-pref";
 import { readToken } from "@/lib/tokens";
 
 const MAX_DPR = 1.5;
@@ -20,13 +21,14 @@ function glyph(col: number, row: number, step: number): string {
  */
 export function CodeRain() {
   const ref = useRef<HTMLCanvasElement>(null);
+  const reducedNow = useReducedMotion();
 
   useEffect(() => {
     const canvas = ref.current;
     const parent = canvas?.parentElement;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !parent || !ctx) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reducedNow) return;
 
     const color = readToken("--color-neon");
     const font = readToken("--font-mono") || "monospace";
@@ -98,7 +100,7 @@ export function CodeRain() {
       window.removeEventListener("resize", onResize);
       stop();
     };
-  }, []);
+  }, [reducedNow]);
 
   return <canvas ref={ref} className="code-rain" aria-hidden="true" />;
 }
