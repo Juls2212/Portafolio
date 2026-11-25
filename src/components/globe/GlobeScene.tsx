@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import type { RootState } from "@react-three/fiber";
 import {
   AdditiveBlending,
   BufferAttribute,
@@ -24,12 +25,16 @@ import { PANEL_SELECTOR, subscribePointer, pointer } from "@/lib/ambient";
 import { GLOBE_LABEL_COUNT, getGlobeLabels, setGlobeVisible } from "@/lib/globe-store";
 import { DURATION, EASE, bezier } from "@/lib/motion";
 import { getSiteMode, getSitePhase, subscribeSiteMode } from "@/lib/site-mode";
+import { getModes, globePointCount } from "@/lib/capabilities";
+import { reportError } from "@/lib/diagnostics";
+import { isReducedMotion, subscribeMotion } from "@/lib/motion-pref";
 import { readToken } from "@/lib/tokens";
 
 const CAM_Z = 16;
 const NODE_COUNT = 24;
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
-const FRAME_MS = 1000 / 45;
+const FRAME_MS_FULL = 1000 / 45;
+const FRAME_MS_LIGHT = 1000 / 30;
 const AUTO_SPIN = 0.11; // rad / s
 const BASE_TILT = 0.38;
 const DRAG_SENSITIVITY = 0.0065;
@@ -44,7 +49,7 @@ const LABEL_NODES: readonly [number, number][] = [
 const NO_DRAG = "button, a, input, textarea, select, summary, [data-no-drag], .cpanel[data-slot='center'], .acc";
 
 const ease = bezier(EASE.out);
-const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reducedMotion = isReducedMotion;
 
 const VERT = /* glsl */ `
 uniform float uTime;
@@ -215,12 +220,6 @@ function buildArcs(nodes: Vector3[]): Float32Array {
   return new Float32Array(out);
 }
 
-function pointCount(): number {
-  const nav = navigator as Navigator & { deviceMemory?: number };
-  const low = window.innerWidth < 768 || (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
-  return low ? 4000 : 10000;
-}
-
 /** Soft rectangle (NDC half extents) covered by the active home panel, where the globe is dimmed. */
 function panelRect(vw: number, vh: number): { x: number; y: number; dim: number } {
   const tall = vw >= 768 && vw < 1200 && vh >= 900;
@@ -250,7 +249,7 @@ export default function GlobeScene() {
   const invalidate = useThree((s) => s.invalidate);
 
   const world = useMemo(() => {
-    const count = pointCount();
+    const count = globePointCount(getModes().quality);
     const nodes = buildNodes();
 
     const uniforms = {
@@ -360,7 +359,7 @@ export default function GlobeScene() {
         return;
       }
       state.raf = requestAnimationFrame(tick);
-      if (now - state.lastTick < FRAME_MS - 1) return;
+      if (now - state.lastTick < (getModes().quality === "light" ? FRAME_MS_LIGHT : FRAME_MS_FULL) - 1) return;
       state.lastTick = now;
       invalidate();
     };
@@ -384,6 +383,12 @@ export default function GlobeScene() {
     // Diagnostic: how many points this device got (4000 on mobile / low-end, 10000 otherwise).
     document.documentElement.dataset.globePoints = String(world.count);
     const unsubscribe = subscribeSiteMode(retarget);
+    // Switching motion on again (HUD control) restarts the loop without a reload.
+    const unsubscribeMotion = subscribeMotion(() => {
+      state.lastFrame = null;
+      ensureLoop();
+      invalidate();
+    });
     const onVisible = () => {
       state.lastFrame = null;
       ensureLoop();
@@ -396,6 +401,7 @@ export default function GlobeScene() {
     retarget();
     return () => {
       unsubscribe();
+      unsubscribeMotion();
       document.removeEventListener("visibilitychange", onVisible);
       cancelAnimationFrame(state.raf);
       state.running = false;
@@ -476,7 +482,7 @@ export default function GlobeScene() {
     invalidate();
   }, [camera, size.width, size.height, world, invalidate]);
 
-  useFrame((frame) => {
+  const frameBody = (frame: RootState) => {
     const { group, uniforms, nodes } = world;
     const now = performance.now();
     const b = state.burst;
@@ -568,6 +574,16 @@ export default function GlobeScene() {
       getGlobeLabels().forEach((el, i) => {
         if (el) el.dataset.hot = i === hot ? "true" : "false";
       });
+    }
+  };
+  let errorCount = 0;
+  useFrame((frame) => {
+    try {
+      frameBody(frame);
+    } catch (e) {
+      reportError("globe", e);
+      // A scene that keeps failing is hidden: the static fallback and the rest of the page remain.
+      if (++errorCount > 5) world.group.visible = false;
     }
   });
 
