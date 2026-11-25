@@ -6,6 +6,8 @@ import { getActiveModule, subscribeActiveModule } from "@/lib/active-module";
 import { pointer, subscribePointer, subscribeScroll } from "@/lib/ambient";
 import { createField, drawField } from "@/lib/space-field";
 import { getSiteMode, subscribeSiteMode } from "@/lib/site-mode";
+import { getModes } from "@/lib/capabilities";
+import { reportError } from "@/lib/diagnostics";
 import { readToken } from "@/lib/tokens";
 
 const MAX_DPR = 1.5;
@@ -65,8 +67,9 @@ export function SpaceBackground() {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    const mobile = window.innerWidth < 768;
-    const field = createField(mobile ? 100 : 250);
+    // Hints and the light mode only lower the star count.
+    const light = window.innerWidth < 768 || getModes().background === "light";
+    const field = createField(light ? 100 : 250);
     canvas.dataset.stars = String(field.stars.length); // diagnostic
     const colors = [readToken("--color-neon-hi"), readToken("--color-teal"), readToken("--color-lime")] as const;
     let width = 0;
@@ -97,6 +100,13 @@ export function SpaceBackground() {
     const active = () => getSiteMode() === "explore" && !document.hidden;
 
     const render = (now = performance.now()) => {
+      try {
+        renderNow(now);
+      } catch (e) {
+        reportError("starfield", e);
+      }
+    };
+    const renderNow = (now: number) => {
       frame = 0;
       if (!active() || !dirty) return;
       if (scrolling && now - lastDraw < SCROLL_DRAW_MS) {
