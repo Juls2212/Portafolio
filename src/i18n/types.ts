@@ -34,6 +34,22 @@ export interface Dictionary {
     back: string;
     sysOnline: string;
     scroll: string;
+    motionOn: string;
+    motionReduced: string;
+    motionToReduced: string;
+    motionToOn: string;
+    motionSystem: string;
+    motionSite: string;
+  };
+  debug: {
+    title: string;
+    copy: string;
+    copied: string;
+    copyFailed: string;
+    close: string;
+    hint: string;
+    errors: string;
+    none: string;
   };
   globe: {
     nodes: readonly [string, string, string];
