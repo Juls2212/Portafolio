@@ -241,6 +241,7 @@ html[data-intro="playing"] .matrix-canvas {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  min-height: 100vh;
   min-height: 100svh;
   background:
     radial-gradient(60% 50% at 50% 36%, color-mix(in oklab, var(--color-neon) 15%, transparent), transparent 70%),
@@ -549,20 +550,17 @@ html[data-ready] .screen {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
-  .screen {
-    opacity: 1 !important;
-  }
-  .matrix-layer {
-    display: none !important;
-  }
+/* Reduced motion (OS setting or the site control, see src/lib/motion-pref.ts): motion is switched off,
+   but the page keeps its calm opacity fades. Elements listed in :not() keep their own fade animations. */
+:where(html[data-motion="reduced"]) *:not(.screen, .hud-boot, [data-reveal], .atmo__tint, .glabel),
+:where(html[data-motion="reduced"]) *:not(.screen, .hud-boot, [data-reveal], .atmo__tint, .glabel)::before,
+:where(html[data-motion="reduced"]) *:not(.screen, .hud-boot, [data-reveal], .atmo__tint, .glabel)::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+:where(html[data-motion="reduced"]) .matrix-layer {
+  display: none !important;
 }
 
 /* ------------------------------------------------------------------ */
@@ -581,6 +579,7 @@ main {
 
 .stack {
   position: relative;
+  min-height: 100vh;
   min-height: 100svh;
   padding: 6rem 1.25rem 5rem;
   background:
@@ -604,6 +603,7 @@ main {
     padding: 7rem 2.5rem 5rem;
   }
   .stack[data-mode="3d"] {
+    min-height: 100vh;
     min-height: 100svh;
   }
 }
@@ -773,11 +773,9 @@ html[data-orb] body * {
 }
 
 
-@media (prefers-reduced-motion: reduce) {
-  .keycap[data-selected="true"] {
+:where(html:where([data-motion="reduced"])) .keycap[data-selected="true"] {
     translate: 0 -4px;
   }
-}
 
 /* ------------------------------------------------------------------ */
 /* Phase 3: projects gallery, experience, contact, footer              */
@@ -940,6 +938,7 @@ html[data-orb] body * {
 /* Projects module: exactly one viewport. The project changes only through arrows, marks and
    Left/Right keys, never through scrolling. */
 .projects[data-mode="3d"] {
+  height: 100vh;
   height: 100svh;
   min-height: 30rem;
   overflow: hidden;
@@ -1149,6 +1148,7 @@ html[data-orb] body * {
 .experience,
 .contact {
   position: relative;
+  min-height: 100vh;
   min-height: 100svh;
   padding: 7rem 1.25rem 5rem;
 }
@@ -1532,6 +1532,7 @@ html[data-orb] body * {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-height: 100vh;
   min-height: 100svh;
   padding: var(--hud-safe) 1rem 3.6rem;
 }
@@ -2023,15 +2024,13 @@ html[data-ready] .cpanel[data-slot="right"] .cpanel__glass.screen {
   align-self: flex-start;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .t-card {
+:where(html:where([data-motion="reduced"])) .t-card {
     opacity: 1 !important;
     transform: none !important;
   }
-  .acc__panel {
+:where(html:where([data-motion="reduced"])) .acc__panel {
     transition: none !important;
   }
-}
 
 /* ------------------------------------------------------------------ */
 /* Phase 4.2: home / explore modes, transition, social buttons         */
@@ -2045,6 +2044,7 @@ html[data-mode="home"] {
 }
 html[data-mode="home"] body {
   overflow: hidden;
+  height: 100vh;
   height: 100svh;
 }
 html[data-mode="home"] #explore-root {
@@ -2052,6 +2052,7 @@ html[data-mode="home"] #explore-root {
 }
 /* The room itself may scroll inside its own box (a tall accordion panel on a phone). */
 html[data-mode="home"] .room {
+  height: 100vh;
   height: 100svh;
   overflow-x: hidden;
   overflow-y: auto;
@@ -2745,20 +2746,18 @@ html[data-pointer="on"] .atmo__spot {
 }
 
 /* HUD boot: elements appear with a short stagger once the intro is over. */
-@media (prefers-reduced-motion: no-preference) {
-  html:not([data-ready]) .hud-boot {
-    opacity: 0;
-  }
-  html[data-ready] .hud-boot {
-    animation: hud-in var(--dur-base) var(--ease-out) calc(var(--b, 0) * 90ms + 150ms) both;
-  }
-  @keyframes hud-in {
+@keyframes hud-in {
     from {
       opacity: 0;
       transform: translate3d(0, -8px, 0);
     }
   }
-}
+html:where(:not([data-motion="reduced"])):not([data-ready]) .hud-boot {
+    opacity: 0;
+  }
+html:where(:not([data-motion="reduced"]))[data-ready] .hud-boot {
+    animation: hud-in var(--dur-base) var(--ease-out) calc(var(--b, 0) * 90ms + 150ms) both;
+  }
 
 /* --- Globe: labels, no-WebGL fallback --- */
 .glabels {
@@ -2843,23 +2842,21 @@ html[data-webgl="1"] .globe-fallback {
 }
 
 /* --- Depth: reveal, tilt, light sweep (fine pointers, motion allowed) --- */
-@media (prefers-reduced-motion: no-preference) {
-  [data-reveal] {
+:where(html:where(:not([data-motion="reduced"]))) [data-reveal] {
     transition:
       opacity var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms),
       scale var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms),
       filter var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms);
   }
-  html[data-motion="on"] [data-reveal]:not([data-in]) {
+html:where(:not([data-motion="reduced"]))[data-motion="on"] [data-reveal]:not([data-in]) {
     opacity: 0;
     scale: 0.94;
     filter: blur(6px);
   }
-}
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .academic,
-  .t-card,
-  .project__image {
+@media (hover: hover) and (pointer: fine) {
+:where(html:where(:not([data-motion="reduced"]))) .academic,
+:where(html:where(:not([data-motion="reduced"]))) .t-card,
+:where(html:where(:not([data-motion="reduced"]))) .project__image {
     position: relative;
     transform: perspective(900px) rotateX(calc(var(--ty, 0) * -5deg)) rotateY(calc(var(--tx, 0) * 5deg));
     transition:
@@ -2871,17 +2868,17 @@ html[data-webgl="1"] .globe-fallback {
       scale var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms),
       filter var(--dur-slow) var(--ease-out) calc(var(--rd, 0) * 90ms);
   }
-  .academic[data-live],
-  .t-card[data-live],
-  .project__image[data-live] {
+:where(html:where(:not([data-motion="reduced"]))) .academic[data-live],
+:where(html:where(:not([data-motion="reduced"]))) .t-card[data-live],
+:where(html:where(:not([data-motion="reduced"]))) .project__image[data-live] {
     box-shadow:
       0 2px 4px rgb(0 0 0 / 0.35),
       0 14px 28px -10px rgb(0 0 0 / 0.5),
       0 34px 64px -24px color-mix(in oklab, var(--accent, var(--color-neon)) 32%, transparent);
   }
-  .academic::after,
-  .t-card::after,
-  .project__image::after {
+:where(html:where(:not([data-motion="reduced"]))) .academic::after,
+:where(html:where(:not([data-motion="reduced"]))) .t-card::after,
+:where(html:where(:not([data-motion="reduced"]))) .project__image::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -2891,27 +2888,25 @@ html[data-webgl="1"] .globe-fallback {
     background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.08) 50%, transparent 62%) no-repeat -160% 0 / 160% 100%;
     transition: opacity var(--dur-base) ease, background-position 0.9s var(--ease-out);
   }
-  .academic:hover::after,
-  .t-card:hover::after,
-  .project__image:hover::after {
+:where(html:where(:not([data-motion="reduced"]))) .academic:hover::after,
+:where(html:where(:not([data-motion="reduced"]))) .t-card:hover::after,
+:where(html:where(:not([data-motion="reduced"]))) .project__image:hover::after {
     opacity: 1;
     background-position: 260% 0;
   }
-
-  /* Magnetic buttons: the shared pointer listener writes --mgx / --mgy (px) while hovering. */
-  .btn,
-  .social__btn,
-  .arrow-btn,
-  .hud__back {
+:where(html:where(:not([data-motion="reduced"]))) .btn,
+:where(html:where(:not([data-motion="reduced"]))) .social__btn,
+:where(html:where(:not([data-motion="reduced"]))) .arrow-btn,
+:where(html:where(:not([data-motion="reduced"]))) .hud__back {
     position: relative;
     overflow: hidden;
     isolation: isolate;
     translate: calc(var(--mgx, 0) * 1px) calc(var(--mgy, 0) * 1px);
   }
-  .btn::after,
-  .social__btn::after,
-  .arrow-btn::after,
-  .hud__back::after {
+:where(html:where(:not([data-motion="reduced"]))) .btn::after,
+:where(html:where(:not([data-motion="reduced"]))) .social__btn::after,
+:where(html:where(:not([data-motion="reduced"]))) .arrow-btn::after,
+:where(html:where(:not([data-motion="reduced"]))) .hud__back::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -2920,34 +2915,23 @@ html[data-webgl="1"] .globe-fallback {
     background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.16) 50%, transparent 65%);
     transform: translate3d(-120%, 0, 0);
   }
-  .btn:hover::after,
-  .social__btn:hover::after,
-  .arrow-btn:hover:not(:disabled)::after,
-  .hud__back:hover::after {
+:where(html:where(:not([data-motion="reduced"]))) .btn:hover::after,
+:where(html:where(:not([data-motion="reduced"]))) .social__btn:hover::after,
+:where(html:where(:not([data-motion="reduced"]))) .arrow-btn:hover:not(:disabled)::after,
+:where(html:where(:not([data-motion="reduced"]))) .hud__back:hover::after {
     transform: translate3d(120%, 0, 0);
     transition: transform 0.7s var(--ease-out);
   }
-  .btn:active,
-  .social__btn:active,
-  .arrow-btn:active,
-  .hud__back:active {
+:where(html:where(:not([data-motion="reduced"]))) .btn:active,
+:where(html:where(:not([data-motion="reduced"]))) .social__btn:active,
+:where(html:where(:not([data-motion="reduced"]))) .arrow-btn:active,
+:where(html:where(:not([data-motion="reduced"]))) .hud__back:active {
     opacity: 0.62;
   }
 }
 
 /* Carousel: a light sweep crosses the panel that becomes active. */
-@media (prefers-reduced-motion: no-preference) {
-  .cpanel[data-slot="center"] .cpanel__glass::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    background: linear-gradient(105deg, transparent 36%, color-mix(in oklab, var(--accent) 20%, transparent) 50%, transparent 64%);
-    transform: translate3d(-110%, 0, 0);
-    animation: panel-sweep 0.9s var(--ease-out) 0.1s both;
-  }
-  @keyframes panel-sweep {
+@keyframes panel-sweep {
     from {
       transform: translate3d(-110%, 0, 0);
       opacity: 1;
@@ -2957,7 +2941,16 @@ html[data-webgl="1"] .globe-fallback {
       opacity: 0;
     }
   }
-}
+:where(html:where(:not([data-motion="reduced"]))) .cpanel[data-slot="center"] .cpanel__glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 36%, color-mix(in oklab, var(--accent) 20%, transparent) 50%, transparent 64%);
+    transform: translate3d(-110%, 0, 0);
+    animation: panel-sweep 0.9s var(--ease-out) 0.1s both;
+  }
 
 /* --- Heading decode: the real characters stay in flow; a scrambled glyph is drawn over each one --- */
 .dc {
@@ -2967,12 +2960,11 @@ html[data-webgl="1"] .globe-fallback {
   display: inline-block;
   white-space: nowrap;
 }
-@media (prefers-reduced-motion: no-preference) {
-  html[data-motion="on"] .decode .dc:not([data-r]) {
+html:where(:not([data-motion="reduced"]))[data-motion="on"] .decode .dc:not([data-r]) {
     color: transparent;
     -webkit-text-fill-color: transparent;
   }
-  html[data-motion="on"] .decode .dc[data-g]::before {
+html:where(:not([data-motion="reduced"]))[data-motion="on"] .decode .dc[data-g]::before {
     content: attr(data-g);
     position: absolute;
     inset: 0;
@@ -2987,7 +2979,6 @@ html[data-webgl="1"] .globe-fallback {
     opacity: 0.9;
     pointer-events: none;
   }
-}
 
 /* --- Mobile: fewer effects --- */
 @media (max-width: 767px), (pointer: coarse) {
@@ -2998,21 +2989,19 @@ html[data-webgl="1"] .globe-fallback {
 }
 
 /* --- Reduced motion: static atmosphere, no moving layers --- */
-@media (prefers-reduced-motion: reduce) {
-  .atmo__shafts,
-  .fog,
-  .scan-sweep,
-  .hud-frame__led {
+:where(html:where([data-motion="reduced"])) .atmo__shafts,
+:where(html:where([data-motion="reduced"])) .fog,
+:where(html:where([data-motion="reduced"])) .scan-sweep,
+:where(html:where([data-motion="reduced"])) .hud-frame__led {
     animation: none;
   }
-  .atmo__dots {
+:where(html:where([data-motion="reduced"])) .atmo__dots {
     translate: none;
     transform: none;
   }
-  .atmo__spot {
+:where(html:where([data-motion="reduced"])) .atmo__spot {
     display: none;
   }
-}
 
 /* ------------------------------------------------------------------ */
 /* Phase 5.1: living home panels, EXPLORE space background             */
@@ -3156,15 +3145,13 @@ html[data-module="projects"] .space-bg__glow {
     display: none;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .circuit__pulses {
+:where(html:where([data-motion="reduced"])) .circuit__pulses {
     display: none;
   }
-  .space-bg__twinkle {
+:where(html:where([data-motion="reduced"])) .space-bg__twinkle {
     animation: none;
     opacity: 0.3;
   }
-}
 
 /* --- Home panels as holographic windows --- */
 .cpanel {
@@ -3244,16 +3231,16 @@ html[data-module="projects"] .space-bg__glow {
 }
 
 /* Depth layers: only the active panel, fine pointers, motion allowed. */
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .cpanel[data-slot="center"] .pfull {
+@media (hover: hover) and (pointer: fine) {
+:where(html:where(:not([data-motion="reduced"]))) .cpanel[data-slot="center"] .pfull {
     perspective: 900px;
   }
-  .cpanel[data-slot="center"] .depth-1 {
+:where(html:where(:not([data-motion="reduced"]))) .cpanel[data-slot="center"] .depth-1 {
     transform: translateZ(14px);
     translate: calc(var(--nx, 0) * -4px * var(--pdamp, 1)) calc(var(--ny, 0) * -3px * var(--pdamp, 1));
     transition: translate 0.35s var(--ease-out);
   }
-  .cpanel[data-slot="center"] .depth-2 {
+:where(html:where(:not([data-motion="reduced"]))) .cpanel[data-slot="center"] .depth-2 {
     transform: translateZ(6px);
     translate: calc(var(--nx, 0) * -2px * var(--pdamp, 1)) calc(var(--ny, 0) * -1.5px * var(--pdamp, 1));
     transition: translate 0.35s var(--ease-out);
@@ -3285,43 +3272,39 @@ html[data-module="projects"] .space-bg__glow {
   background: var(--color-neon-hi);
   animation: blink 1s steps(2, end) infinite;
 }
-@media (prefers-reduced-motion: no-preference) {
-  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .term-line__cmd {
-    width: 0;
-    animation: type-cmd 0.75s steps(6, end) calc(var(--i, 0) * 380ms + 0.7s) forwards;
-  }
-  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .term-out {
-    animation: term-in 0.55s var(--ease-out) calc(var(--i, 0) * 380ms + 1.45s) both;
-  }
-  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(3) {
-    animation-delay: calc(var(--i, 0) * 380ms + 1.55s);
-  }
-  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(4) {
-    animation-delay: calc(var(--i, 0) * 380ms + 1.65s);
-  }
-  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(5) {
-    animation-delay: calc(var(--i, 0) * 380ms + 1.75s);
-  }
-  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(6) {
-    animation-delay: calc(var(--i, 0) * 380ms + 1.85s);
-  }
-  @keyframes type-cmd {
+@keyframes type-cmd {
     to {
       width: 6ch;
     }
   }
-  @keyframes term-in {
+@keyframes term-in {
     from {
       opacity: 0;
       scale: 0.985;
     }
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .term-line::after {
+html:where(:not([data-motion="reduced"]))[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .term-line__cmd {
+    width: 0;
+    animation: type-cmd 0.75s steps(6, end) calc(var(--i, 0) * 380ms + 0.7s) forwards;
+  }
+html:where(:not([data-motion="reduced"]))[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .term-out {
+    animation: term-in 0.55s var(--ease-out) calc(var(--i, 0) * 380ms + 1.45s) both;
+  }
+html:where(:not([data-motion="reduced"]))[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(3) {
+    animation-delay: calc(var(--i, 0) * 380ms + 1.55s);
+  }
+html:where(:not([data-motion="reduced"]))[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(4) {
+    animation-delay: calc(var(--i, 0) * 380ms + 1.65s);
+  }
+html:where(:not([data-motion="reduced"]))[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(5) {
+    animation-delay: calc(var(--i, 0) * 380ms + 1.75s);
+  }
+html:where(:not([data-motion="reduced"]))[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .pfull--presentation > :nth-child(6) {
+    animation-delay: calc(var(--i, 0) * 380ms + 1.85s);
+  }
+:where(html:where([data-motion="reduced"])) .term-line::after {
     animation: none;
   }
-}
 
 /* Technology ticker. */
 .ticker {
@@ -3372,11 +3355,9 @@ html[data-module="projects"] .space-bg__glow {
     transform: translate3d(-50%, 0, 0);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .ticker__track {
+:where(html:where([data-motion="reduced"])) .ticker__track {
     animation: none;
   }
-}
 
 /* About: scanning photo frame, staged paragraphs. */
 .about-frame {
@@ -3441,14 +3422,7 @@ html[data-module="projects"] .space-bg__glow {
   opacity: 0;
   transform: translateY(-50%);
 }
-@media (prefers-reduced-motion: no-preference) {
-  :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .about-frame__scan::before {
-    animation: scan-y 3.4s linear infinite;
-  }
-  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .stagger {
-    animation: line-in 0.6s var(--ease-out) calc(0.25s + var(--k, 0) * 0.2s) both;
-  }
-  @keyframes scan-y {
+@keyframes scan-y {
     0% {
       transform: translateY(-50%);
       opacity: 0;
@@ -3462,13 +3436,18 @@ html[data-module="projects"] .space-bg__glow {
       opacity: 0;
     }
   }
-  @keyframes line-in {
+@keyframes line-in {
     from {
       opacity: 0;
       transform: translateY(10px);
     }
   }
-}
+:where(html:where(:not([data-motion="reduced"]))) :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .about-frame__scan::before {
+    animation: scan-y 3.4s linear infinite;
+  }
+html:where(:not([data-motion="reduced"]))[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .stagger {
+    animation: line-in 0.6s var(--ease-out) calc(0.25s + var(--k, 0) * 0.2s) both;
+  }
 
 /* Interests: modules that light up, tiny star field in the Astronomy one. */
 .interest-grid li {
@@ -3523,11 +3502,9 @@ html[data-module="projects"] .space-bg__glow {
     transform: scale(1.6);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .starfield span {
+:where(html:where([data-motion="reduced"])) .starfield span {
     animation: none;
   }
-}
 
 /* Floating widgets (desktop only): small ornamental tags straddling the active panel's edges. */
 .pwidgets {
@@ -3636,14 +3613,12 @@ html[data-module="projects"] .space-bg__glow {
     transform: scaleX(1);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .pw--bars span,
-  .pw__hex-track,
-  .pw__ring-arc,
-  .pw__line {
+:where(html:where([data-motion="reduced"])) .pw--bars span,
+:where(html:where([data-motion="reduced"])) .pw__hex-track,
+:where(html:where([data-motion="reduced"])) .pw__ring-arc,
+:where(html:where([data-motion="reduced"])) .pw__line {
     animation: none;
   }
-}
 
 @media (max-height: 760px) {
   .cpanel__full:has(.interest-grid) {
@@ -3855,8 +3830,7 @@ html[data-scrolling] .circuit__pulses path {
 .cpanel[data-panel="presentation"][data-slot="center"] .shell::before {
   content: none;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .cpanel[data-slot="center"]:not([data-panel="presentation"]) .shell::after {
+:where(html:where(:not([data-motion="reduced"]))) .cpanel[data-slot="center"]:not([data-panel="presentation"]) .shell::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -3864,7 +3838,6 @@ html[data-scrolling] .circuit__pulses path {
     transform: translate3d(-110%, 0, 0);
     animation: panel-sweep 0.9s var(--ease-out) 0.1s both;
   }
-}
 
 .cpanel__full {
   inset: 0;
@@ -3883,8 +3856,8 @@ html[data-scrolling] .circuit__pulses path {
   background: color-mix(in oklab, var(--accent) 24%, var(--color-abyss));
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%);
 }
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .cpanel[data-slot="center"] .wchrome {
+@media (hover: hover) and (pointer: fine) {
+:where(html:where(:not([data-motion="reduced"]))) .cpanel[data-slot="center"] .wchrome {
     transform: perspective(900px) translateZ(22px);
     translate: calc(var(--nx, 0) * -6px * var(--pdamp, 1)) calc(var(--ny, 0) * -4px * var(--pdamp, 1));
     transition: translate 0.35s var(--ease-out);
@@ -3954,16 +3927,14 @@ html[data-scrolling] .circuit__pulses path {
   background: linear-gradient(90deg, transparent, var(--color-neon-hi), transparent);
   transform: translateX(-100%);
 }
-@media (prefers-reduced-motion: no-preference) {
-  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .scan-underline::after {
-    animation: underline-scan 2.8s var(--ease-in-out) infinite;
-  }
-  @keyframes underline-scan {
+@keyframes underline-scan {
     to {
       transform: translateX(340%);
     }
   }
-}
+html:where(:not([data-motion="reduced"]))[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .scan-underline::after {
+    animation: underline-scan 2.8s var(--ease-in-out) infinite;
+  }
 
 /* --- About: chamfered scanner frame and facets --- */
 .about-photo {
@@ -4031,11 +4002,7 @@ html[data-scrolling] .circuit__pulses path {
   line-height: 1.55;
   color: var(--color-ink);
 }
-@media (prefers-reduced-motion: no-preference) {
-  html[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .facet-panel:not([hidden]) .facet-text {
-    animation: type-reveal 0.55s steps(30, end) calc(var(--i, 0) * 380ms + 0.6s) both;
-  }
-  @keyframes type-reveal {
+@keyframes type-reveal {
     from {
       clip-path: inset(0 100% 0 0);
       opacity: 0.3;
@@ -4045,7 +4012,9 @@ html[data-scrolling] .circuit__pulses path {
       opacity: 1;
     }
   }
-}
+html:where(:not([data-motion="reduced"]))[data-ready] :is(.cpanel[data-slot="center"], .acc[data-open="true"]) .facet-panel:not([hidden]) .facet-text {
+    animation: type-reveal 0.55s steps(30, end) calc(var(--i, 0) * 380ms + 0.6s) both;
+  }
 
 /* --- Interests: orbital system --- */
 .pfull--interests .screen__title {
@@ -4243,12 +4212,10 @@ html[data-scrolling] .circuit__pulses path {
     transform: rotate(-360deg);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .orbit__ring,
-  .orbit__btn {
+:where(html:where([data-motion="reduced"])) .orbit__ring,
+:where(html:where([data-motion="reduced"])) .orbit__btn {
     animation: none;
   }
-}
 .orbit-readout {
   min-height: 8.5rem;
   padding-left: 1.2rem;
@@ -4378,4 +4345,218 @@ html[data-panel-hover] .cpanel[data-slot="center"] {
 .orbit__btn,
 .orbit__sun {
   pointer-events: auto;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Robustness: failsafes, feature fallbacks, reduced mode, light mode  */
+/* ------------------------------------------------------------------ */
+
+/* If the app never starts (script error, blocked JS), the intro cover must not hide the page. */
+html[data-intro="on"] #app-root {
+  animation: intro-failsafe 0s linear 7s forwards;
+}
+html[data-intro] .matrix-layer {
+  animation: intro-failsafe-hide 0s linear 9s forwards;
+}
+@keyframes intro-failsafe {
+  to {
+    visibility: visible;
+  }
+}
+@keyframes intro-failsafe-hide {
+  to {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+/* Viewport units: browsers without svh (before 2022) use vh for the custom properties too. */
+@supports not (height: 100svh) {
+  .projects__col {
+    --maxh-side: min(62vh, calc(100vh - 18.5rem));
+    --maxh-wide: min(42vh, calc(100vh - 33rem));
+  }
+  .carousel {
+    --ph: min(31rem, calc(100vh - 15.5rem));
+  }
+  .orbit {
+    --osz: clamp(12.5rem, 39vh, 19rem);
+  }
+  @media (min-width: 768px) and (max-width: 1199px) and (min-height: 900px) {
+    .carousel {
+      --ph: min(31rem, calc(100vh - 28rem));
+    }
+  }
+}
+
+/* color-mix() is the one colour feature used everywhere: without it, key surfaces fall back to solid tokens. */
+@supports not (color: color-mix(in oklab, red 50%, blue)) {
+  .shell,
+  .t-card,
+  .academic,
+  .social__btn,
+  .key-panel,
+  .term {
+    background: var(--color-panel);
+  }
+  .shell::before {
+    background: var(--accent);
+  }
+  .atmo__tint,
+  .atmo__shafts,
+  .atmo__spot,
+  .fog,
+  .space-bg__glow {
+    display: none;
+  }
+}
+/* clip-path polygons are decoration: without them the panel plate is a plain bordered box. */
+@supports not (clip-path: polygon(0 0, 100% 0, 100% 100%)) {
+  .shell {
+    border: 1px solid var(--accent);
+    background: var(--color-panel);
+  }
+  .shell::before,
+  .wchrome {
+    display: none;
+  }
+}
+/* mask-image (ticker edges, scrim) is optional polish. */
+@supports not ((mask-image: linear-gradient(#000, #000)) or (-webkit-mask-image: linear-gradient(#000, #000))) {
+  .pfull--presentation::before {
+    display: none;
+  }
+}
+
+/* Light mode (software renderer, very low-end hints): fewer and cheaper decorative layers. */
+html[data-quality="light"] .atmo__shafts,
+html[data-quality="light"] .atmo__spot,
+html[data-quality="light"] .fog,
+html[data-quality="light"] .space-bg__twinkle,
+html[data-quality="light"] .atmo__dots--2 {
+  display: none;
+}
+html[data-quality="light"] .screen,
+html[data-quality="light"] .scan-sweep {
+  animation-iteration-count: 1;
+}
+
+/* Reduced mode keeps calm opacity fades (no movement): panels, HUD and reveals fade in. */
+@keyframes fade-soft {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+html[data-motion="reduced"][data-ready] .screen,
+html[data-motion="reduced"][data-ready] .cpanel .cpanel__glass.screen,
+html[data-motion="reduced"][data-ready] .cpanel[data-slot="center"] .cpanel__glass.screen {
+  animation: fade-soft 0.9s ease calc(var(--i, 0) * 180ms) both !important;
+}
+html[data-motion="reduced"][data-ready] .hud-boot {
+  animation: fade-soft 0.7s ease calc(var(--b, 0) * 90ms) both !important;
+}
+html[data-motion="reduced"] [data-reveal] {
+  transition: opacity 0.7s ease;
+}
+html[data-motion="reduced"] [data-reveal]:not([data-in]) {
+  opacity: 0;
+}
+html[data-motion="reduced"] .t-card {
+  opacity: 1;
+}
+
+/* HUD animation control and the HUD controls row. */
+.hud__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 1.9rem;
+  padding: 0 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--color-neon) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-abyss) 70%, transparent);
+  color: var(--color-mute);
+  font: 600 0.66rem/1 var(--font-mono);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.motion-toggle:hover {
+  color: var(--color-ink);
+  border-color: var(--color-neon-hi);
+}
+.motion-toggle__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-neon);
+  box-shadow: 0 0 8px var(--color-neon);
+}
+.motion-toggle[data-reduced="true"] .motion-toggle__dot {
+  background: var(--color-mute);
+  box-shadow: none;
+}
+
+/* ?debug=1 diagnostics panel. */
+.diag {
+  position: fixed;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  width: min(34rem, calc(100vw - 1.5rem));
+  max-height: min(70vh, 40rem);
+  border: 1px solid var(--color-neon-hi);
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--color-abyss) 96%, transparent);
+  color: var(--color-ink);
+  font: 500 0.68rem/1.45 var(--font-mono);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.6);
+}
+.diag__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-neon) 30%, transparent);
+  color: var(--color-neon-hi);
+}
+.diag__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+.diag__actions button {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--color-neon);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--color-neon-hi);
+  font: inherit;
+  cursor: pointer;
+}
+.diag__hint {
+  margin: 0;
+  padding: 0.35rem 0.75rem;
+  color: var(--color-mute);
+}
+.diag__body {
+  margin: 0;
+  padding: 0 0.75rem 0.75rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
