@@ -12,9 +12,9 @@ export const imageMeta: Record<string, ImageMeta> = {
     "height": 674
   },
   "ares.jpeg": {
-    "src": "/projects/ares.87e15d61.jpeg",
-    "width": 1199,
-    "height": 1312
+    "src": "/projects/ares.985cc7da.jpeg",
+    "width": 591,
+    "height": 919
   },
   "bookshelf.jpeg": {
     "src": "/projects/bookshelf.811798b7.jpeg",
