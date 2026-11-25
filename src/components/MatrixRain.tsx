@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useT } from "@/i18n/language-context";
+import { reportError } from "@/lib/diagnostics";
 import { finishIntro, useIntroDone } from "@/lib/intro-store";
 
 const DURATION_MS = 2000;
@@ -83,6 +84,14 @@ export function MatrixRain() {
     };
 
     const draw = (now: number) => {
+      try {
+        drawFrame(now);
+      } catch (e) {
+        reportError("intro-rain", e);
+        end();
+      }
+    };
+    const drawFrame = (now: number) => {
       if (!start) start = now;
       const elapsed = now - start;
       if (elapsed >= DURATION_MS) {
