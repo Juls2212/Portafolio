@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { isReducedMotion } from "@/lib/motion-pref";
 import { keyboardActions, keyboardApi } from "@/lib/keyboard-store";
 
 /**
@@ -24,7 +25,7 @@ const timers: ReturnType<typeof setTimeout>[] = [];
 
 const notify = () => listeners.forEach((l) => l());
 const root = () => document.documentElement;
-const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduced = isReducedMotion;
 
 function getMode(): SiteMode {
   if (mode === null) {
